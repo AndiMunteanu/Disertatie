@@ -19,14 +19,30 @@ This chapter contains informations about the methods used for graph clustering, 
 \subsection{Leiden}
 
 \section{PhenoGraph pipeline}
-\subsection{Describing the pipeline}
-\subsubsection{About dimensionality reduction}
-\subsection{How to convert matrix data into a graph using kNN}
-\subsection{SNN - providing weights using Jaccard Similarity Index}
+    \subsection{Describing the pipeline}
+    Present the steps that describe the pipeline. (Dimensionality reduction, graph building and graph clustering)
+    \subsubsection{About dimensionality reduction}
+    
+    \subsection{How to convert matrix data into a graph using kNN}
+    \subsection{SNN - providing weights using Jaccard Similarity Index}
+    
 
 \section{Element-Centric Similarity}
-\subsection{Description about how it works}
-\subsection{Properties, comparison with other clustering metrics}
+    \subsection{Description about how it works}
+    Describe the intuition behind ECS: the idea of the bipartite graph between points and clusters.
+
+    More details about how to calculate ECS. Talk about the affinity matrix and the L1 distance.
+    \subsection{Properties, comparison with other clustering metrics}
+    Present some limitation of other clustering metrics such as bias toward cluster sizes, shapes and so on. Perhaps present some comparison figures from the main article.
+
+    Present some properties of ECS:
+    \begin{enumerate}
+        \item the fact that it can be used not only for flat disjoint clusterings, but also for overlapping or hierarchical partitions
+        \item it overcomes the biases present in the other clustering metrics
+        \item ECS illustrates the overall similarity between two partitions but also can help in identifying the points where the clustering are not similar
+    \end{enumerate}
+    \subsection{ECC}
+    Talk about how ECC is calculated
 
 \section{Intro info about biological data and sequencing techniques}
 Tell about sequencing techniques, how the initial data looks, about cells, genes, what they mean, what is the role and the purpose of the clusters in the biological interpretation.
