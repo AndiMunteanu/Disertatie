@@ -13,12 +13,37 @@ This chapter contains informations about the methods used for graph clustering, 
 \subsection{Community detection - Optimizing the quality function}
 
 \subsection{Louvain}
+The Louvain algorithm \cite{Blondel2008b} is the state-of-the art community detection algorithm that uses an iterative greedy approach. The method can be used to optimize a partition provided by the user, but the default behaviour is to initially assign each node to its own cluster.
+Each iteration is described by two repeating steps. The first step is to change the partition structure in a greedy manner. For each node the algorithm evaluates whether the change of its label could improve the overall quality or not. If so, the node moves to the cluster that provides the greatest increase of quality. This operations is repeated until no change is longer possible. The second step is shrinking the graph, meaning each community with a super-node. Thus, the number of nodes of the resulting graph will be the same as the number of clusters that were identified in the first step. The weight of the edges are also recalculated using the sum of inter-cluster weights of the original graph.
+These two steps are repeated until the partition doesn't change after the first phase.
+
+The algorithm can use multiple runs, when the current iterations takes as starting point the partition that is obtained in the previous one. The algorithm is said to reach convergence if no change is noticed at two consecutive iterations.
+
+Altough it is a greedy algorithm, Louvain proved it can obtain qualitative clusters. Another advantage of the method is computational efficiency: the average time complexity is $O(n \log n)$, where $n$ is the number of nodes.
+
+% The authors claim that the order of the nodes doesn't seem to affect the final results, but can impact the time of execution.
+% More details about the fact that only the labels of the neighbours are considered in the first place?
 
 \subsection{Louvain refined}
 \subsection{SLM}
 \subsection{Leiden}
 
 \section{PhenoGraph pipeline}
+    PhenoGraph \cite{Levine2015} is a pipeline proposed by Levine et al. to process biological data and obtain a clustering that is interpreted as different cell types. The pipeline is consists of the following steps:
+    \begin{enumerate}
+        \item dimensionality reduction
+        \item graph construction
+        \item graph clustering
+    \end{enumerate}
+
+    Each step will be described in detail in the following sections.
+
+    \subsection{Dimensionality reduction}
+    Given that the human genome contains approximately 25-30000 genes, it is expected that the input data (that is, cells extracted from a tissue from multiple donors) will be highly dimensional. Clustering techinques are highly reliant on calculating distances between points, thus an increased number of dimension will lead to expensive computations. The solution for this is to reduce the input space such that no information is lost.
+    
+    One of the most used approach is Principal Component Analysis (PCA) \cite{WOLD198737}, which is a method that uses linear combinations (called principal components) of the initial features to reduce the number of dimensions. This algorithm relies on computing the singular values decomposition, which is a heavy computational task, but several methods of truncating the calculation were developed in order to increase the algorithm's efficiency \cite{Baglama2016IRLBAFP}. To prevent the loss of the original information, the common practice is to use somewhere between 30 and 50 principal components.
+
+    Dimensionality reduction can also be performed in a non-linear fashion. Here we mention UMAP \cite{mcinnes2018uniform}, an graph-based method that tries to optimize a cross-entropy function in order to create a reduced space that preserves the topology of the original data: the similar points are kept in close proximity, while maintaining the separation between distinct well-defined groups. Compared to the linear methods, UMAP manages to preserve the structure of the original data in only two or three dimensions. This characteristic makes UMAP a more suitable choice when it comes to visualising the data. The downside of the non-linear method that, given its stochastic nature, it can be affected by the value of the random seeds. Usually the effect is presented as slight changes of the topology of the groups or rotations of the representation.
     \subsection{Describing the pipeline}
     Present the steps that describe the pipeline. (Dimensionality reduction, graph building and graph clustering)
     \subsubsection{About dimensionality reduction}
@@ -46,3 +71,4 @@ This chapter contains informations about the methods used for graph clustering, 
 
 \section{Intro info about biological data and sequencing techniques}
 Tell about sequencing techniques, how the initial data looks, about cells, genes, what they mean, what is the role and the purpose of the clusters in the biological interpretation.
+
