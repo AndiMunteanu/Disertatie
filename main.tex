@@ -36,7 +36,6 @@
     \input{front/titlepage}
     \input{front/declaration1}
     \input{front/declaration2}
-    
     % table of contents
     \tableofcontents
 
@@ -53,5 +52,41 @@
     \input{chapters/chapter4}
     
     \input{chapters/conclusions}
+    \newpage
+
+    Title: ClustAssess: Tools for Assessing Clustering
+
+    Student name: Munteanu Andi
+    
+    Coordinator: Conf dr. Liviu Ciortuz \\
+
+    The thesis is based on the ClustAssess paper \cite{clustassess}, where I contributed as an author and developer of the R package. \\
+
+    
+    Clustering is an unsupervised method that is used to classify and label points based on different similarity metrics. Comparing to the supervised classifiers, clustering algorithms do not require training and using a model and are most suitable when the label of the points are not priorly known and are inferred based on the features that describe them.
+
+    Depending on the approach, clustering methods can be divided in multiple categories, such as centroid-based (k-means), density-based (DBSCAN), hierarchical, distribution-based (EM). One approach that gained popularity in the last decades are the graph-based clustering. Some of its advantages is providing flexibility when it comes to the cluster shapes and sizes, or the scalability.
+
+    Our thesis focus is set on the community detection techniques, that is graph-based clustering approach that rely on optimizing an objective function (also known in literature as quality function or quality metric, as it tries to evaluate the quality of the clustering by encouraging high density of edges inside clusters and as few intrer-cluster links as possible). This method is intensively used, as it manages to obtain close to optimal results in an efficient time. 
+
+    Given that many datasets are provided as points displayed on a high-dimensional space, a methodology that enables the use of community detection method on this data is required. Our reference is the PhenoGraph algorithm presented by Levine et. al \cite{Levine2015}, that establishes a pipeline that firstly applies a dimensionality reduction technique (a linear one such as PCA or non-linear one such as UMAP), then generates a graph using the Nearest Neighbour algorithm. The resulting graph is then used as input for the community detection algorithm.
+
+    The PhenoGraph pipeline has been used frequently in several domains. One of them is the downstream analysis of biological data, where the goal is to cluster the cells in multiple groups that will be used to infer some biological conclusions. The input data is usually provided as a matrix that has cells sampled from different donors at different timepoints on the rows. The columns represent the genes that can be expressed in the cells. Given that the human genome contains approximately 30.000 genes, the input space is a high dimensional one, which makes the PhenoGraph pipeline a suitable choice for processing the data. Also, using graphs to represent data is a more appropiate way to describe the cell-cell interaction.
+
+    The current state-of the art of processing the biological data is thus using the PhenoGraph pipeline: for dimensionality reduction, approximate PCA using the Lanczos bidiagonalization method \cite{Baglama2016IRLBAFP} or UMAP \cite{mcinnes2018uniform}; for graph building, the Nearest Neighbour algorithm \cite{Xu2015}; for community detection, Louvain \cite{Blondel2008b}, Louvain with multilevel refinement \cite{Rotta2011}, Smart Local Moving Algorithm \cite{Waltman2013} and Leiden \cite{Traag2019a}. 
+
+    Currently, some of the most popular tools used for analyzing single-cell data are Seurat \cite{Hao2021}, Monocle \cite{Cao2019} and SCANPY \cite{Wolf2018}. Our thesis makes a comparison between Seurat and Monocle regarding the implementation of the PhenoGraph pipeline. This was motivated by the significant differences between the results of the two packages and the subsequent divergent biological interpretation of the obtained partitions. The question we wanted to answer is whether this differences are caused by computational or biological factors (such as sequencing depth or how the data was pre-processed).
+
+    In our thesis we showcase how the divergence was caused by using parameters values that do not match. The conclusion we draw is that tuning the algorithm's parameters is essential in obtaining reproducable results. Given the stochastic nature of the algorithms that are involved in the pipeline, we also noticed how changing the random seed value is a direct factor that affects the clustering output.
+
+    The instability caused by random seed was previously identified in several papers that pursued the algorithm modification in order to achieve stability. Such example is kmeans++ \cite{kmeanspp}, where the authors replaced the random initialization of the centroids with assigning probabilities of selection based on the distance to the existing center points. Another example is provided in the clust-perturb algorithm proposed by Stacey et al. \cite{STACEY2021}, where the robustness is evaluated by introducing random noise in the graph.
+
+    Our work is focused on providing a pipeline that follows the algorithms involved in the PhenoGraph. The package that we developed its purposed to provide informative plots that would give the user insight about how different parameters impact the number of clusters and the partitioning. Another purpose that we try to achieve is to evaluate and provide insight about parameters configuration that are robust to the change of seeds. The robustness is determined by using Element Centric Similarity (ECS) \cite{Gates2019}, a measurement that determines how similar are two clustering of the same data. 
+
+
+
+
+    \bibliographystyle{unsrt}
+    \bibliography{chapters/bibliography}{}
     
 \end{document}
