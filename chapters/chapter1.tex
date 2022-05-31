@@ -44,6 +44,30 @@ Altough it is a greedy algorithm, Louvain proved it can obtain qualitative clust
     One of the most used approach is Principal Component Analysis (PCA) \cite{WOLD198737}, which is a method that uses linear combinations (called principal components) of the initial features to reduce the number of dimensions. This algorithm relies on computing the singular values decomposition, which is a heavy computational task, but several methods of truncating the calculation were developed in order to increase the algorithm's efficiency \cite{Baglama2016IRLBAFP}. To prevent the loss of the original information, the common practice is to use somewhere between 30 and 50 principal components.
 
     Dimensionality reduction can also be performed in a non-linear fashion. Here we mention UMAP \cite{mcinnes2018uniform}, an graph-based method that tries to optimize a cross-entropy function in order to create a reduced space that preserves the topology of the original data: the similar points are kept in close proximity, while maintaining the separation between distinct well-defined groups. Compared to the linear methods, UMAP manages to preserve the structure of the original data in only two or three dimensions. This characteristic makes UMAP a more suitable choice when it comes to visualising the data. The downside of the non-linear method that, given its stochastic nature, it can be affected by the value of the random seeds. Usually the effect is presented as slight changes of the topology of the groups or rotations of the representation.
+
+    \subsection{Graph construction}
+    As mentioned before, the relationship between nodes is better described in a graph structure, where the existence of the edges between nodes indicates a specific degree of similarity. The conversion is performed using the kNN alogrithm. This explains the need of performing dimensionality reduction prior to the graph construction, as the distance calculation becomes computationally expensive on large number of features.
+    
+    The first step is to calculate the \textit{k} nearest neighbours for each node using a distance metric (usually Euclidian or cosine). The graph will be created by drawing edges between a node and its \textit{k} neighbours. The neighbourhood relationship is not symmetrical, thus the graph will be directed. 
+    
+    Given the curse of dimensionality \cite{Altman2018}, distance cannot be trusted to be used for the weight of the edges. Thus, the authors of the PhenoGraph proposed to calculate the weights using the Jaccard Similarity Index (JSI) of the neighbourhoods. The weights can take values between 0 and 1 using the formula 
+    
+    \[ W_{ij} = \frac{|v(i) \cap v(j)|}{|v(i) \cup v(j)|}, \] where $v(i)$ indicates the neighbourhood of the node $i$. Thus, weights closer to zero indicate that the two points have significantly different neighbourhoods, whereas values closer to one mark a good overlap between the sets of neighbours.
+    
+    It should be mentioned that the node its included in his own neighbourhood. Otherwise, this would lead to misclassification of weights, especially in the case where the two nodes are direct neighbours, but the rest of their neighbourhoods are disjoint. If $v(i)$ doesn't include $i$, the intersection will not contain any element, thus the edge will get a weight of zero, altough the points are direct neighbours. 
+
+    [[Add the two photos with the examples from the supplementary]]
+
+
+    Comp
+
+    \subsection{Graph clustering}
+    The last step consists in identifying the clusters using a community detection algorithm. As presented in the previous section, this method is computationally efficient and manages to group points into dense subgraphs by optimizing a quality function, without being dependant on the cluster size or shape.
+
+    The original PhenoGraph article proposed using the Louvain article, but in our experiments we will use its improvements aswell, namely Louvain with multilevel refinement, SLM and Leiden. 
+
+    The authors' approach on getting results that are not affected by the seed was to run the community detection 100 times and choose the most qualitative partition.
+
     \subsection{Describing the pipeline}
     Present the steps that describe the pipeline. (Dimensionality reduction, graph building and graph clustering)
     \subsubsection{About dimensionality reduction}
@@ -53,7 +77,34 @@ Altough it is a greedy algorithm, Louvain proved it can obtain qualitative clust
     
 
 \section{Element-Centric Similarity}
+    \subsection{Introductory terms}
+    \textit{Cluster affiliation graph}: a bipartite graph that represents the relationship between points and clusters. One vertex set will contain the points, while for the other one node is associated with a cluster. An edge indicates that a point belongs to a cluster (or, viceversa, that a cluster contains that point).
+    
+    \textit{Cluster-induced element graph}: a directed graph where the node set is represented by the original points. Two nodes share an edge if they belong to the same cluster.
+
+    \textit{Affinity matrix} The affinity matrix, or the personalized PageRank (PPR) affinity is determined by calculating the paths between elements of the cluster-induced element graph. The PPR of a node $i$ to the others is computed as follows:
+
+    \[ p_i = (1 - \alpha) v_i + \alpha p_i W \]
+
+    where $v_i$ is a one-hot encoded vector with 1 on the $i^{th}$ position, $W$ the weighted adjacency matrix of the cluster-induced element graph and $\alpha$ is a parameter that determines the importance of overlaps in overlapping or hierarchical communities.
+
+    For disjoint partitions, the formula is simplified to the following form:
+
+    \[ 
+        p_{ij} = 
+        \begin{cases}
+            0, \text{if i and j don't belong to the same cluster} \\
+            \frac{\alpha}{|C_\beta|}, \text{if i and j belong to the cluster } \beta \\
+            1 - \alpha + \frac{\alpha}{|C_\beta|}, \text{if } i = j
+        \end{cases}
+    \]
+    
     \subsection{Description about how it works}
+
+    Element-Centric similarity is a new clustering comparison measure proposed by Gates et al \cite{Gates2019}. This score is based on calculating the L1 distance between the affinity matrices that are associated with the two clusterings:
+
+    \[ S_i (\mathcal{A}, \mathcal{B}) = 1 - \frac{1}{2 \alpha} \sum_{j = 1}^N |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | \]
+
     Describe the intuition behind ECS: the idea of the bipartite graph between points and clusters.
 
     More details about how to calculate ECS. Talk about the affinity matrix and the L1 distance.
