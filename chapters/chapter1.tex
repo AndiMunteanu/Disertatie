@@ -61,6 +61,8 @@ One of the main differences between Louvain and SLM relates to the convergence o
     Given the curse of dimensionality \cite{Altman2018}, distance cannot be trusted to be used for the weight of the edges. Thus, the authors of the PhenoGraph proposed to calculate the weights using the Jaccard Similarity Index (JSI) of the neighbourhoods. The weights can take values between 0 and 1 using the formula 
     
     \[ W_{ij} = \frac{|v(i) \cap v(j)|}{|v(i) \cup v(j)|}, \] where $v(i)$ indicates the neighbourhood of the node $i$. Thus, weights closer to zero indicate that the two points have significantly different neighbourhoods, whereas values closer to one mark a good overlap between the sets of neighbours.
+
+    The weighted graph is also referred in literature as Shared Nearest Neighbour graph (SNN).
     
     It should be mentioned that the node its included in his own neighbourhood. Otherwise, this would lead to misclassification of weights, especially in the case where the two nodes are direct neighbours, but the rest of their neighbourhoods are disjoint. If $v(i)$ doesn't include $i$, the intersection will not contain any element, thus the edge will get a weight of zero, altough the points are direct neighbours. 
 
