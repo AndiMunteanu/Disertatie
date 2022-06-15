@@ -79,7 +79,7 @@ Monocle and Seurat agree on the cosine measurement as the distance metric, but t
 \end{figure}
 
 \subsection{Graph construction}
-Both packages use the kNN-based method of building the graph based on the reduced space. The calculation of the nearest neighbours is done by the method implemented in the \verb|RANN| package (citation). The output is affected by the embedding that is used as a base for the graph construction, the number of neighbours (or simply \textit{k}) and the graph type.
+Both packages use the kNN-based method of building the graph based on the reduced space. The calculation of the nearest neighbours is done by the method implemented in the \verb|RANN| package\footnote{The package can be found at the following GitHub page: \url{https://github.com/jefferislab/RANN}} .The output is affected by the embedding that is used as a base for the graph construction, the number of neighbours (or simply \textit{k}) and the graph type.
 
 Both Monocle and Seurat agree upon the value of 20 nearest neighbours. As for the base embedding, Seurat builds the graph on the reduced space obtained by PCA, while Monocle uses the low dimensional data from UMAP. As Figure \ref{fig:s4-m3-graph-base} suggests, changing the base embedding can affect the clustering output. On the Cuomo data, the number of clusters is lower when PCA is used as base embedding compared to UMAP for both packages (this can be observed by comparing panels S9 with S10 an M9 with M10 respectively).
 
@@ -182,14 +182,66 @@ However, continuing the alignment process between the two packages, the graph ty
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{2_snn_issue_3.png}}
     \caption{\label{fig:s4-m3-snn-3}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
+
 \subsection{Graph clustering}
+Once the two packages reach an agreement on the low-dimensional reduced space and on the built graph, the clustering step must be aligned in order to obtain the same partitions. Firstly, both Seurat and Monocle should use the same clustering alogrithms. By default, Monocle clusters data using the Leiden algorithm and Seurat uses the Louvain algorithm. In Figure \ref{fig:s4-m3-graph-alg} we can observe how the two community detection methods produce a different output on the same graph.
+
+Given the optimization nature of the clustering algorithm, the objective function is another important parameter that can influence the composition of the clusters, as it can be seen in \ref{fig:s4-m3-quality}. It is noticeable how the CPM quality function, used by default by Monocle, leads to getting more clusters compared to the RBConfiguration function which is used by Seurat.
+
+The parameter that directly influences the number of clusters is the resolution parameter. Monocle sets the resolution to $1e-4$ and Seurat to $0.8$. Figure \ref{fig:s4-m3-res} proves the intuition that using different resolution values outputs different number of clusters.
+
+Finally, the community detection algorithms are iterative, thus using a different number of iterations might lead to different results, especially in the cases where no convergence is reached. Monocle uses by default a number of 2 iterations, while Seurat 10. The difference between the clusterings can be seen in the left panel of Figure \ref{fig:s4-m3-cont}, which is a contingency table between the partitions obtained by the two package. To get a perfect match between the two, the matrix should be diagonal, but in our case there are three cases of non-zero entries outside the diagonal.
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{2_graph_alg.png}}
+    \caption{\label{fig:s4-m3-graph-alg}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{2_quality_function.png}}
+    \caption{\label{fig:s4-m3-quality}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{2_resolution.png}}
+    \caption{\label{fig:s4-m3-res}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
 
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{2_cont_table.png}
+    \includegraphics[width=0.3\linewidth]{2_final_clustering.png}
+    \caption{\label{fig:s4-m3-cont}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
 
+\section{Summary}
+After performing all the aligning steps (summarized in Table \ref{tab:param}), both packages obtain the same partition (shown in the right display of Figure \ref{fig:s4-m3-cont}).
 
+The conclusion is that the initial differences between Seurat and Monocle were caused by technical factors, namely different implementation of the method or different values for the important parameters.
 
-
-
-
-
-
+% Please add the following required packages to your document preamble:
+% \usepackage[table,xcdraw]{xcolor}
+% If you use beamer only pass "xcolor=table" option, i.e. \documentclass[xcolor=table]{beamer}
+\begin{table}[]
+    \resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Parameter name}     & \textbf{Step}                            & \textbf{Monocle value}                                                              & \textbf{Seurat value}                                                                         \\ \hline
+\textbf{seed}               & \cellcolor[HTML]{6D9FF3}-                & 2016                                                                                & 42                                                                                            \\ \hline
+\textbf{feature set}        & \cellcolor[HTML]{E7A101}Dim reduction    & all genes                                                                           & HV genes                                                                                      \\ \hline
+\textbf{UMAP min dist}      & \cellcolor[HTML]{E7A101}Dim reduction    & 0.1                                                                                 & 0.3                                                                                           \\ \hline
+\textbf{UMAP n neighbours}  & \cellcolor[HTML]{E7A101}Dim reduction    & 15                                                                                  & 30                                                                                            \\ \hline
+\textbf{base embedding}     & \cellcolor[HTML]{BE809D}Graph building   & UMAP                                                                                & PCA                                                                                           \\ \hline
+\textbf{SNN implementation} & \cellcolor[HTML]{BE809D}Graph building   & \begin{tabular}[c]{@{}l@{}}no self-neighbours\\ only direct neighbours\end{tabular} & \begin{tabular}[c]{@{}l@{}}with self-neighbours\\ direct and indirect neighbours\end{tabular} \\ \hline
+\textbf{graph type}         & \cellcolor[HTML]{BE809D}Graph building   & unweighted                                                                          & weighted                                                                                      \\ \hline
+\textbf{clustering method}  & \cellcolor[HTML]{72B980}Graph clustering & Leiden                                                                              & Louvain                                                                                       \\ \hline
+\textbf{quality function}   & \cellcolor[HTML]{72B980}Graph clustering & CPM                                                                                 & RBConfiguration                                                                               \\ \hline
+\textbf{resolution}         & \cellcolor[HTML]{72B980}Graph clustering & 1e-4                                                                                & 0.8                                                                                           \\ \hline
+\textbf{\#iterations}       & \cellcolor[HTML]{72B980}Graph clustering & 2                                                                                   & 10                                                                                            \\ \hline
+\end{tabular}}
+\caption{\label{tab:param}The parameters that affect the output of the clustering pipeline.}
+\end{table}
