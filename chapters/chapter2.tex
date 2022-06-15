@@ -46,8 +46,10 @@ We started by analyzing the tehnical differences between the two packages. This 
 \subsection{Dimensionality reduction}
 As stated in the previous sections, both Seurat and Monocle suggest applying PCA on the raw dataset and UMAP or tSNE afterwards. The default choice for non-linear dimensionality reduction is UMAP. As for the implementation, both packages are using the same R packages: \verb|irlba| for PCA (citation) and \verb|uwot| for UMAP (citaton).
 
+\subsubsection{PCA}
 The output of the PCA can be affected by parameters such as the number of principal components or the precision of the calculation (the \verb|irlba| package performs an approximate PCA calculation), but the difference between the packages lies in the feature space. Although the data contains up to 30 000 genes, most of them are not appropiate for describing the cells behaviour, as they would introduce more noise than perform any significant separation. Thus, the standard in the processing of the biological data is to choose a relatively small subset of genes that contain discriminative information. By default, Monocle uses all genes, but Seurat performs the PCA only on the genes that have the most variability (citation) (also reffered in literature as highly variable - or HV - genes). Figure \ref{fig:s4-m3-pca} illustrates how the feature set affects the topology. If Seurat uses all genes for PCA, the resulting embedding will contain numerous small islands (see panels S3 and S4). Using only HV genes in Monocle leads to more compact group of cells (see panels M3 and M4).
 
+\subsubsection{UMAP}
 The UMAP algorithm is signifcantly affected by three parameters:
 \begin{itemize}
     \item \textit{the distance metric} that is used in the original space
@@ -77,8 +79,109 @@ Monocle and Seurat agree on the cosine measurement as the distance metric, but t
 \end{figure}
 
 \subsection{Graph construction}
-Both packages use the kNN-based method of building the graph based on the reduced space. The output is affected by the embedding that is used as a base for the graph construction, the number of neighbours and the graph type.
+Both packages use the kNN-based method of building the graph based on the reduced space. The calculation of the nearest neighbours is done by the method implemented in the \verb|RANN| package (citation). The output is affected by the embedding that is used as a base for the graph construction, the number of neighbours (or simply \textit{k}) and the graph type.
 
+Both Monocle and Seurat agree upon the value of 20 nearest neighbours. As for the base embedding, Seurat builds the graph on the reduced space obtained by PCA, while Monocle uses the low dimensional data from UMAP. As Figure \ref{fig:s4-m3-graph-base} suggests, changing the base embedding can affect the clustering output. On the Cuomo data, the number of clusters is lower when PCA is used as base embedding compared to UMAP for both packages (this can be observed by comparing panels S9 with S10 an M9 with M10 respectively).
+
+When it comes to calculating the Shared Nearest Neighbour graph, the two packages have their own implementation. Although they are synonymous in the most of the cases, there are some differences that impact the final structure of the resulting graph.
+
+\subsubsection{Self-neighbours}
+The major discrepancy between them relates to the usage of the self-neighbours. A \textit{self-neighbour} refers to label a point as a near neighbour of itself. Seurat uses self-neighbours, while Monocle doesn't.
+
+The importance of self-neighbours is illustrated on Figure \ref{fig:s4-m3-snn-1}. Setting $k = 5$, we calculate the neighbourhoods for the fourth and the fifth points. If we include the self-neighbour, we get:
+
+\[ \begin{aligned}
+    N_5(4) = \{4,5,3,1,2\}& \\
+    N_5(5) = \{5,4,3,2,1\}
+    \end{aligned}
+\]
+
+Given that the SNN graph is calculated using the Jaccard Similarity Index of the neighbourhoods, the weight of the edge between these two nodes will be:
+
+\[ W_{4,5} = \textrm{JSI}(N_5(4), N_5(5)) = \frac{|N_5(4) \cap N_5(5)|}{|N_5(4) \cup N_5(5)|} = \frac{5}{5} = 1 ,\]
+
+which indicates a perfect similarity between the two points. However, not including the self-neighbours leads to the following results:
+
+\[ \begin{aligned}
+    N_5(4) = \{5,3,1,2,6\}& \\
+    N_5(5) = \{4,3,2,1,7\}
+    \end{aligned}
+\]
+
+The intersection between these neighbourhoods contains only three points, and the union contains seven. Thus, the weight assigned in this case would be $3 / 7 = 0.43$. Even if we decrease the value of $k$ from 5 to 4, the JSI would be $3 / 5 = 0.6$, which still does not reflect or indicate the reality of a perfect similarity between the two nodes.
+
+Another discrepancy is presented in the example provided in the Figure \ref{fig:s4-m3-snn-2}. Using the same value for $k$, we calculate the neighbourhoods for the first and the sixth point. If we include the self-neighbour, we get:
+
+\[ \begin{aligned}
+    N_5(1) &= \{1,2,3,4,6\} \\
+    N_5(6) &= \{6,7,8,9,1\}
+    \end{aligned}
+\]
+
+The neighbourhoods sets of these two points point out that they are direct neighbours. Therefore, the weight of the edge between them is expected to be non-zero: $\displaystyle \frac{|N_6(4)  \cap N_6(6)|}{|N_6(4)  \cup N_6(6)|} = \frac{2}{8} = 0.25$. Excluding the self-neighbours leads to disjoint neighbourhoods:
+
+\[ \begin{aligned}
+    N_5(1) &= \{2,3,4,6,5\} \\
+    N_5(6) &= \{7,8,9,1,10\}
+    \end{aligned}
+\]
+
+Thus, not using the self-neighbours leads to the false conclusion that there is no similarity between direct neighbours.
+
+\subsubsection{Indirect neighbours}
+Another implementation difference between Seurat and Monocle relates to the indirect neighbour. We consider two points to be \textit{indirect neighbours} if the intersection of their neighbourhoods is not disjoint. Looking at the third and eighth points from the example from Figure \ref{fig:s4-m3-snn-1} when $k = 6$, the intersection between their neighbourhoods is not empty ($\{5, 7\}$ for Seurat and $\{5,7,4,6\}$ for Monocle).
+
+Even if the intersection is not empty, Monocle discards any use of the indirect neighbours. Thus, there will be an edge between two nodes only if they are direct neighbours.
+
+\subsubsection{Scaling the weights}
+Following the conclusion of the previous two differences, we can state that Monocle cannot build a graph that has an edge with weight 1.
+
+\begin{proof} From the first difference, Monocle does not include the self-neighbours, therefore points that are direct neighbours will always have the JSI less than one, as the intersection will not include the points themselves. The only way to reach a perfect similarity is to have two points that are not direct neighbours, but share the same neighbourhood.
+
+However, from the second difference, we know that in Monocle indirect neighbours are not taken into consideration. Therefore, even if we would obtain an edge with a weight of one between the two points, it will be discarded, given the restriction.
+\end{proof}
+
+The developers of the Monocle package decided to solve this limitation by performing a scaling of the weights to the interval $[0, 1]$. The issue of this approach is that it can affect the clustering output and the downstream partitioning result, as some quality function are scale variant (citation).
+
+\subsubsection{Case study}
+To prove the importance of these differences between the two implementations, we used the Cuomo \cite{Cuomo2020} dataset. The number of nearest neighbours is set to $k = 150$. Figure \ref{fig:s4-m3-snn-3} illustrates the difference between Monocle and Seurat results, shown for the neighbours of a point chosen from the datset.
+
+The first two panels present the weight distribution of the edges incident to the chosen point when using Seurat (A) and Monocle (B). The third panel contains the absolute difference of the weights of the edges incident to direct neighbours. As it can be observed, the maximum difference is not greater than 0.012, which suggests that the two implementations behave similarly for direct neighbours when $k$ is reasonably high. Panel D shows the distribution of the weights incident to the indirect neighbours. The colour scale indicates that there is a reasonable amount of points where the weight has a value that may have an impact in the overall structure of the final graph.
+
+\subsubsection{Aligning the SNN implementations}
+After the analysis of the two implementations of the algorithm of building the SNN graph, we concluded that Seurat's is a more suitable choice. 
+
+However, continuing the alignment process between the two packages, the graph type parameters is different. Seurat is building the SNN (the weighted) graph, while Monocle builds the unweighted one. The impact of this parameter is presented in the Figure \ref{fig:s4-m3-n-graph-type}, which suggests that using a weighted version of the same graph is influencing the clustering output.
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{2_graph_base.png}}
+    \caption{\label{fig:s4-m3-graph-base}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{2_graph_type.png}}
+    \caption{\label{fig:s4-m3-n-graph-type}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=5cm]{2_snn_issue_1.png}}
+    \caption{\label{fig:s4-m3-snn-1}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=5cm]{2_snn_issue_2.png}}
+    \caption{\label{fig:s4-m3-snn-2}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{2_snn_issue_3.png}}
+    \caption{\label{fig:s4-m3-snn-3}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
 \subsection{Graph clustering}
 
 
