@@ -15,14 +15,14 @@ In chapter one we presented the steps that are involved in the PhenoGraph pipeli
 
 For the dimensionality reduction, both packages allow the usage of either linear methods (PCA) or non-linear ones (UMAP and tSNE). The developers of the both packages recommend performing the PCA reduction on the raw data, followed by tSNE or UMAP. The graph construction is performed using the kNN based method. For the community detection, Monocle uses the Louvain and Leiden alogrithms, whereas Seurat can cluster the cells using Louvain with multi-level refinement and SLM, too.
 
-We note that all the algorithms involved in the clustering pipeline contain at least one stochastic component, therefore 
 
 \begin{table}[]
     \begin{tabular}{|l|l|l|l|}
         \hline
-                         & \textbf{Dim reduction}    & \textbf{Graph construction} & \textbf{Graph clustering} \\ \hline
-        \textbf{Seurat}  & \begin{tabular}[c]{@{}l@{}}PCA followed\\ by tSNE or UMAP\end{tabular} & \begin{tabular}[c]{@{}l@{}}kNN based\\ support for SNN\end{tabular}   & \begin{tabular}[c]{@{}l@{}}Louvain, Louvain refined,\\ SLM, Leiden\end{tabular} \\ \hline
-        \textbf{Monocle} & \begin{tabular}[c]{@{}l@{}}PCA followed\\ by tSNE or UMAP\end{tabular} & \begin{tabular}[c]{@{}l@{}}kNN based\\ support for SNN\end{tabular}   & Louvain, Leiden           \\ \hline
+                               & \textbf{Dim reduction}    & \textbf{Graph construction} & \textbf{Graph clustering}                                                                                                                                                                                                                                                                                                                                                              \\ \hline
+        \textbf{Seurat}        & \begin{tabular}[c]{@{}l@{}}PCA followed\\ by tSNE or UMAP\end{tabular} & \begin{tabular}[c]{@{}l@{}}kNN based\\ support for SNN\end{tabular}   & \begin{tabular}[c]{@{}l@{}}Louvain, Louvain refined,\\ SLM, Leiden\end{tabular}                                                                                                                                                                                                                                                                                                                                                              \\ \hline
+        \textbf{Monocle}       & \begin{tabular}[c]{@{}l@{}}PCA followed\\ by tSNE or UMAP\end{tabular} & \begin{tabular}[c]{@{}l@{}}kNN based\\ support for SNN\end{tabular}   & Louvain, Leiden                                                                                                                                                                                                                                                                                                                                                                        \\ \hline
+        \textbf{Used packages} & \begin{tabular}[c]{@{}l@{}}PCA: \verb|irlba| \tablefootnote{GitHub official repository: \url{https://github.com/bwlewis/irlba}}\\ tSNE: \verb|Rtsne| \tablefootnote{GitHub official repository: \url{https://github.com/jkrijthe/Rtsne}} \\ UMAP: \verb|uwot| \tablefootnote{GitHub official repository: \url{https://github.com/jlmelville/uwot}}\end{tabular} & \begin{tabular}[c]{@{}l@{}}kNN: \verb|RANN| \tablefootnote{GitHub official repository: \url{https://github.com/jefferislab/RANN}} \end{tabular}   & \begin{tabular}[c]{@{}l@{}}Louvain: \verb|igraph| \tablefootnote{GitHub official repository: \url{https://github.com/igraph/igraph}}\\        Leiden: \verb|leidenbase| \tablefootnote{GitHub official repository: \url{https://github.com/cole-trapnell-lab/leidenbase}} , \\\verb|leiden| \tablefootnote{GitHub official repository: \url{https://github.com/TomKellyGenetics/leiden}}\end{tabular}  \\ \hline
     \end{tabular}
     \caption{\label{tab:s4-m3-methods}The algorithms used by Monocle and Seurat inside the Phenograph pipeline}
 \end{table}
@@ -42,6 +42,16 @@ The biological interpretation of the data heavily relies on the clusters' struct
 
 \section{Aligning the results}
 We started by analyzing the tehnical differences between the two packages. This involves implementation discrepancies, but also different values of the parameters involved in the clustering process. Our analysis will follow the PhenoGraph pipeline and we will compare the two packages regarding the three steps.
+
+\subsection{Seed}
+All algorithms involved in the clustering pipeline contain at least one stochastic component, therefore it is expected that using different random seeds might impact the clustering result. By default, Monocle uses 2016 as random seed, and Seurat 42. Figure \ref{fig:s4-m3-seed} shows how changing the seed affects the topology: in some cases, the changes are equivalent to some rotations of the groups, but there can be noticable differences inside a group's structure (as it can be observed for the island in the right side of the two panels).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7cm]{2_S1.png}
+    \includegraphics[width=7cm]{2_S2.png}
+    \caption{\label{fig:s4-m3-seed}Clustering distribution with default parameters for Monocle (right) and Seurat (left). The title indicates the default random seed that is used.}
+\end{figure}.
 
 \subsection{Dimensionality reduction}
 As stated in the previous sections, both Seurat and Monocle suggest applying PCA on the raw dataset and UMAP or tSNE afterwards. The default choice for non-linear dimensionality reduction is UMAP. As for the implementation, both packages are using the same R packages: \verb|irlba| for PCA (citation) and \verb|uwot| for UMAP (citaton).
@@ -79,7 +89,7 @@ Monocle and Seurat agree on the cosine measurement as the distance metric, but t
 \end{figure}
 
 \subsection{Graph construction}
-Both packages use the kNN-based method of building the graph based on the reduced space. The calculation of the nearest neighbours is done by the method implemented in the \verb|RANN| package\footnote{The package can be found at the following GitHub page: \url{https://github.com/jefferislab/RANN}} .The output is affected by the embedding that is used as a base for the graph construction, the number of neighbours (or simply \textit{k}) and the graph type.
+Both packages use the kNN-based method of building the graph based on the reduced space. The calculation of the nearest neighbours is done by the method implemented in the \verb|RANN| package. The output is affected by the embedding that is used as a base for the graph construction, the number of neighbours (or simply \textit{k}) and the graph type.
 
 Both Monocle and Seurat agree upon the value of 20 nearest neighbours. As for the base embedding, Seurat builds the graph on the reduced space obtained by PCA, while Monocle uses the low dimensional data from UMAP. As Figure \ref{fig:s4-m3-graph-base} suggests, changing the base embedding can affect the clustering output. On the Cuomo data, the number of clusters is lower when PCA is used as base embedding compared to UMAP for both packages (this can be observed by comparing panels S9 with S10 an M9 with M10 respectively).
 
@@ -91,8 +101,8 @@ The major discrepancy between them relates to the usage of the self-neighbours. 
 The importance of self-neighbours is illustrated on Figure \ref{fig:s4-m3-snn-1}. Setting $k = 5$, we calculate the neighbourhoods for the fourth and the fifth points. If we include the self-neighbour, we get:
 
 \[ \begin{aligned}
-    N_5(4) = \{4,5,3,1,2\}& \\
-    N_5(5) = \{5,4,3,2,1\}
+        N_5(4) = \{4,5,3,1,2\} & \\
+        N_5(5) = \{5,4,3,2,1\}
     \end{aligned}
 \]
 
@@ -103,8 +113,8 @@ Given that the SNN graph is calculated using the Jaccard Similarity Index of the
 which indicates a perfect similarity between the two points. However, not including the self-neighbours leads to the following results:
 
 \[ \begin{aligned}
-    N_5(4) = \{5,3,1,2,6\}& \\
-    N_5(5) = \{4,3,2,1,7\}
+        N_5(4) = \{5,3,1,2,6\} & \\
+        N_5(5) = \{4,3,2,1,7\}
     \end{aligned}
 \]
 
@@ -113,16 +123,16 @@ The intersection between these neighbourhoods contains only three points, and th
 Another discrepancy is presented in the example provided in the Figure \ref{fig:s4-m3-snn-2}. Using the same value for $k$, we calculate the neighbourhoods for the first and the sixth point. If we include the self-neighbour, we get:
 
 \[ \begin{aligned}
-    N_5(1) &= \{1,2,3,4,6\} \\
-    N_5(6) &= \{6,7,8,9,1\}
+        N_5(1) & = \{1,2,3,4,6\} \\
+        N_5(6) & = \{6,7,8,9,1\}
     \end{aligned}
 \]
 
 The neighbourhoods sets of these two points point out that they are direct neighbours. Therefore, the weight of the edge between them is expected to be non-zero: $\displaystyle \frac{|N_6(4)  \cap N_6(6)|}{|N_6(4)  \cup N_6(6)|} = \frac{2}{8} = 0.25$. Excluding the self-neighbours leads to disjoint neighbourhoods:
 
 \[ \begin{aligned}
-    N_5(1) &= \{2,3,4,6,5\} \\
-    N_5(6) &= \{7,8,9,1,10\}
+        N_5(1) & = \{2,3,4,6,5\}  \\
+        N_5(6) & = \{7,8,9,1,10\}
     \end{aligned}
 \]
 
@@ -138,7 +148,7 @@ Following the conclusion of the previous two differences, we can state that Mono
 
 \begin{proof} From the first difference, Monocle does not include the self-neighbours, therefore points that are direct neighbours will always have the JSI less than one, as the intersection will not include the points themselves. The only way to reach a perfect similarity is to have two points that are not direct neighbours, but share the same neighbourhood.
 
-However, from the second difference, we know that in Monocle indirect neighbours are not taken into consideration. Therefore, even if we would obtain an edge with a weight of one between the two points, it will be discarded, given the restriction.
+    However, from the second difference, we know that in Monocle indirect neighbours are not taken into consideration. Therefore, even if we would obtain an edge with a weight of one between the two points, it will be discarded, given the restriction.
 \end{proof}
 
 The developers of the Monocle package decided to solve this limitation by performing a scaling of the weights to the interval $[0, 1]$. The issue of this approach is that it can affect the clustering output and the downstream partitioning result, as some quality function are scale variant (citation).
@@ -149,7 +159,7 @@ To prove the importance of these differences between the two implementations, we
 The first two panels present the weight distribution of the edges incident to the chosen point when using Seurat (A) and Monocle (B). The third panel contains the absolute difference of the weights of the edges incident to direct neighbours. As it can be observed, the maximum difference is not greater than 0.012, which suggests that the two implementations behave similarly for direct neighbours when $k$ is reasonably high. Panel D shows the distribution of the weights incident to the indirect neighbours. The colour scale indicates that there is a reasonable amount of points where the weight has a value that may have an impact in the overall structure of the final graph.
 
 \subsubsection{Aligning the SNN implementations}
-After the analysis of the two implementations of the algorithm of building the SNN graph, we concluded that Seurat's is a more suitable choice. 
+After the analysis of the two implementations of the algorithm of building the SNN graph, we concluded that Seurat's is a more suitable choice.
 
 However, continuing the alignment process between the two packages, the graph type parameters is different. Seurat is building the SNN (the weighted) graph, while Monocle builds the unweighted one. The impact of this parameter is presented in the Figure \ref{fig:s4-m3-n-graph-type}, which suggests that using a weighted version of the same graph is influencing the clustering output.
 
@@ -228,20 +238,20 @@ The conclusion is that the initial differences between Seurat and Monocle were c
 % If you use beamer only pass "xcolor=table" option, i.e. \documentclass[xcolor=table]{beamer}
 \begin{table}[]
     \resizebox{\textwidth}{!}{
-\begin{tabular}{|l|l|l|l|}
-\hline
-\textbf{Parameter name}     & \textbf{Step}                            & \textbf{Monocle value}                                                              & \textbf{Seurat value}                                                                         \\ \hline
-\textbf{seed}               & \cellcolor[HTML]{6D9FF3}-                & 2016                                                                                & 42                                                                                            \\ \hline
-\textbf{feature set}        & \cellcolor[HTML]{E7A101}Dim reduction    & all genes                                                                           & HV genes                                                                                      \\ \hline
-\textbf{UMAP min dist}      & \cellcolor[HTML]{E7A101}Dim reduction    & 0.1                                                                                 & 0.3                                                                                           \\ \hline
-\textbf{UMAP n neighbours}  & \cellcolor[HTML]{E7A101}Dim reduction    & 15                                                                                  & 30                                                                                            \\ \hline
-\textbf{base embedding}     & \cellcolor[HTML]{BE809D}Graph building   & UMAP                                                                                & PCA                                                                                           \\ \hline
-\textbf{SNN implementation} & \cellcolor[HTML]{BE809D}Graph building   & \begin{tabular}[c]{@{}l@{}}no self-neighbours\\ only direct neighbours\end{tabular} & \begin{tabular}[c]{@{}l@{}}with self-neighbours\\ direct and indirect neighbours\end{tabular} \\ \hline
-\textbf{graph type}         & \cellcolor[HTML]{BE809D}Graph building   & unweighted                                                                          & weighted                                                                                      \\ \hline
-\textbf{clustering method}  & \cellcolor[HTML]{72B980}Graph clustering & Leiden                                                                              & Louvain                                                                                       \\ \hline
-\textbf{quality function}   & \cellcolor[HTML]{72B980}Graph clustering & CPM                                                                                 & RBConfiguration                                                                               \\ \hline
-\textbf{resolution}         & \cellcolor[HTML]{72B980}Graph clustering & 1e-4                                                                                & 0.8                                                                                           \\ \hline
-\textbf{\#iterations}       & \cellcolor[HTML]{72B980}Graph clustering & 2                                                                                   & 10                                                                                            \\ \hline
-\end{tabular}}
-\caption{\label{tab:param}The parameters that affect the output of the clustering pipeline.}
+        \begin{tabular}{|l|l|l|l|}
+            \hline
+            \textbf{Parameter name}     & \textbf{Step}                            & \textbf{Monocle value}     & \textbf{Seurat value}      \\ \hline
+            \textbf{seed}               & \cellcolor[HTML]{6D9FF3}-                & 2016                       & 42                         \\ \hline
+            \textbf{feature set}        & \cellcolor[HTML]{E7A101}Dim reduction    & all genes                  & HV genes                   \\ \hline
+            \textbf{UMAP min dist}      & \cellcolor[HTML]{E7A101}Dim reduction    & 0.1                        & 0.3                        \\ \hline
+            \textbf{UMAP n neighbours}  & \cellcolor[HTML]{E7A101}Dim reduction    & 15                         & 30                         \\ \hline
+            \textbf{base embedding}     & \cellcolor[HTML]{BE809D}Graph building   & UMAP                       & PCA                        \\ \hline
+            \textbf{SNN implementation} & \cellcolor[HTML]{BE809D}Graph building   & \begin{tabular}[c]{@{}l@{}}no self-neighbours\\ only direct neighbours\end{tabular} & \begin{tabular}[c]{@{}l@{}}with self-neighbours\\ direct and indirect neighbours\end{tabular} \\ \hline
+            \textbf{graph type}         & \cellcolor[HTML]{BE809D}Graph building   & unweighted                 & weighted                   \\ \hline
+            \textbf{clustering method}  & \cellcolor[HTML]{72B980}Graph clustering & Leiden                     & Louvain                    \\ \hline
+            \textbf{quality function}   & \cellcolor[HTML]{72B980}Graph clustering & CPM                        & RBConfiguration            \\ \hline
+            \textbf{resolution}         & \cellcolor[HTML]{72B980}Graph clustering & 1e-4                       & 0.8                        \\ \hline
+            \textbf{\#iterations}       & \cellcolor[HTML]{72B980}Graph clustering & 2                          & 10                         \\ \hline
+        \end{tabular}}
+    \caption{\label{tab:param}The parameters that affect the output of the clustering pipeline.}
 \end{table}
