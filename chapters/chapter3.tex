@@ -1,11 +1,208 @@
-\chapter{ClustAssess}
+\chapter{Assessing the stability}
 
-Amet venenatis urna cursus eget. Quam vulputate dignissim suspendisse in est ante. Proin nibh nisl condimentum id. Egestas maecenas pharetra convallis posuere morbi. Risus viverra adipiscing at in. Vulputate eu scelerisque felis imperdiet. Cras adipiscing enim eu turpis egestas pretium aenean pharetra. In aliquam sem fringilla ut morbi tincidunt augue. Montes nascetur ridiculus mus mauris. Viverra accumsan in nisl nisi scelerisque eu ultrices vitae. In nibh mauris cursus mattis molestie a iaculis. Interdum consectetur libero id faucibus nisl tincidunt eget. Gravida in fermentum et sollicitudin ac orci. Suscipit adipiscing bibendum est ultricies. Etiam non quam lacus suspendisse. Leo urna molestie at elementum eu facilisis sed odio morbi. Egestas congue quisque egestas diam in arcu cursus. Amet consectetur adipiscing elit ut aliquam purus.
+The results of the previous chapter highlighted not only the impact of the parameters on the clustering output, but also raised the question of interpretation stability. While there are parameters which are designed to affect the clustering output, such as the resolution parameter, the community detection, the objective function or the feature space, there are some factors that should not be responsible for obtaining different results.
 
-\section{Titlul secțiunii 1}
+One if these factors is the random seed. It is not an expected behaviour to get different partitions and different downstream biological interpretations if only the seed is changed.
 
-Eros donec ac odio tempor. Facilisi morbi tempus iaculis urna id volutpat. Faucibus in ornare quam viverra orci sagittis eu. Amet tellus cras adipiscing enim eu turpis egestas. Integer feugiat scelerisque varius morbi. Platea dictumst vestibulum rhoncus est pellentesque elit ullamcorper dignissim. Bibendum arcu vitae elementum curabitur. Eu nisl nunc mi ipsum faucibus. Id aliquet lectus proin nibh nisl condimentum id venenatis a. Cras adipiscing enim eu turpis egestas pretium. Quisque non tellus orci ac auctor augue mauris augue. Malesuada pellentesque elit eget gravida cum. Ut lectus arcu bibendum at. Massa id neque aliquam vestibulum morbi blandit. Posuere ac ut consequat semper viverra nam. Viverra adipiscing at in tellus integer feugiat scelerisque varius morbi. Morbi enim nunc faucibus a pellentesque sit amet porttitor eget. Eu feugiat pretium nibh ipsum consequat nisl vel. Nisl purus in mollis nunc sed.
+\section{ClustAssess}
+Under the supervision of professor Irina Mohorianu and Arash Shahsavari, I was part of the team that developed the R package \verb|ClustAssess| \footnote{GitHub official repository: \url{https://github.com/Core-Bioinformatics/ClustAssess}} \cite{clustassess}.
 
-\section{Titlul secțiunii 2}
+The package has several functionalities, including:
+\begin{itemize}
+    \item determine the optimal number of clusters using PAC (method based on cumulative distribution)
+    \item calculate the Element-Centric Similarity (ECS) between two flat, overlapping or hierarchical partitions
+    \item calculate the Element-Centric Consistency (ECC) of a list containing flat, overlapping and hierarchical partitions
+    \item calculate the marker gene similarity across each cell
+    \item stability-based parameter assessment pipeline.
+\end{itemize}
+This chapter will contain a description of the package components that I contributed on research and developing, namely calculating the ECS score and creating the stability pipeline.
 
-Elementum sagittis vitae et leo duis ut diam quam nulla. Purus sit amet volutpat consequat mauris nunc. Tincidunt augue interdum velit euismod in pellentesque massa. Nunc sed augue lacus viverra vitae congue. Porttitor leo a diam sollicitudin. Faucibus pulvinar elementum integer enim. Adipiscing bibendum est ultricies integer quis auctor elit. Blandit aliquam etiam erat velit scelerisque in. A iaculis at erat pellentesque adipiscing commodo elit at. Erat nam at lectus urna duis. Consequat ac felis donec et. Fermentum posuere urna nec tincidunt praesent semper feugiat nibh sed. Proin gravida hendrerit lectus a. Pretium viverra suspendisse potenti nullam ac tortor vitae purus. Arcu cursus euismod quis viverra nibh cras pulvinar mattis. Gravida arcu ac tortor dignissim convallis aenean. Quam nulla porttitor massa id neque aliquam vestibulum morbi. Sed viverra ipsum nunc aliquet. Quis enim lobortis scelerisque fermentum dui faucibus in.
+\section{ECS calculation}
+As far as we are concerned, the Python package \verb|CluSim| \footnote{GitHub official repository: \url{https://github.com/Hoosier-Clusters/clusim}} \cite{Gates2019b}, which is developed and maintained by the authors of the ECS paper \cite{Gates2019}, is the only official source that contains an implementation of the Element-Centric Similarity measure.
+
+
+The ClustAssess package offers an R implementation of this score. The implementation follows the steps presented in the article presented above. For each partition, the cluster affiliation graph is determined, followed by calculating the cluster-induced element graph and teh affinity matrix. Once the affinity matrices are calculated, the ECS can be calculated as the L1 distance between them.
+
+\subsection{Optimising the calculation of the ECS}
+However, as stated in the first chapter, computing the PPR matrix for flat disjoint partitions can be done using the formula \ref{eq:affinity-disjoin}. As it can be observed, for each pair of points, there can only be three values, all of them being independent on the nature of the points. We will use this observation to prove that the calculation of the ECS score can be optimised.
+
+
+
+Let $\mathcal{A}$ and $\mathcal{B}$ be two partitions of the same set of points $\mathcal{P}$. Let $C_a^\mathcal{A}$ denote the $\text{a}^{th}$ cluster of the partition $\mathcal{A}$, and $C_b^\mathcal{B}$ denote the $\text{b}^{th}$ cluster of the partition $\mathcal{B}$. Denote the length of the clusters as follows: $|C_a^{\mathcal{A}}| = c_a \text{ and } |C_b^{\mathcal{B}}| = c_b$.
+
+\begin{remark} \label{remark:pii}
+    $p_{ii}^\mathcal{A} - p_{ii}^\mathcal{B} = p_{ij}^\mathcal{A} - p_{ij}^\mathcal{B}$, for any $i, j \in C_a^\mathcal{A} \cap C_b^\mathcal{B}$
+\end{remark}
+
+\begin{proof}
+    The proof is immediate when $i = j$.
+
+    For $i \neq j$, from the Equation \ref{eq:affinity-disjoin}, we will have:
+    $ 
+        \displaystyle
+        \begin{cases}
+            p_{ij}^\mathcal{A} &= \frac{\alpha}{c_a} \\
+            p_{ij}^\mathcal{B} &= \frac{\alpha}{c_b} 
+        \end{cases}
+    $.
+    Therefore, 
+    \begin{equation} \label{eq:rem1-i}
+        p_{ij}^\mathcal{A} - p_{ij}^\mathcal{B} = \alpha\left(\frac{1}{c_a} - \frac{1}{c_b}\right) 
+    \end{equation}
+
+    From the same equation, we get that 
+    $ 
+        \displaystyle
+        \begin{cases}
+            p_{ii}^\mathcal{A} &= 1-\alpha + \frac{\alpha}{c_a} \\
+            p_{ii}^\mathcal{B} &= 1-\alpha + \frac{\alpha}{c_b} 
+        \end{cases}
+    $. Therefore, 
+    \begin{equation} \label{eq:rem1-ii}
+        p_{ii}^\mathcal{A} - p_{ii}^\mathcal{B} = \left(1-\alpha + \frac{\alpha}{c_a}\right) - \left(1-\alpha+\frac{\alpha}{c_b}\right) = \alpha\left(\frac{1}{c_a}-\frac{1}{c_b}\right)
+    \end{equation}
+
+    From \ref{eq:rem1-i} and \ref{eq:rem1-ii}, we get that $p_{ii}^\mathcal{A} - p_{ii}^\mathcal{B} = p_{ij}^\mathcal{A} - p_{ij}^\mathcal{B}$.
+\end{proof}
+
+\begin{remark} \label{remark:ecs-constant}
+    $\displaystyle\mathcal{S}_i(\mathcal{A}, \mathcal{B}) = 1-\frac{1}{2}\left(|C_a^\mathcal{A} \cap C_b^\mathcal{B}|\cdot \left|\frac{1}{c_a} - \frac{1}{c_b}\right| + |C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})| \cdot \frac{1}{c_a} + |(\mathcal{P} \setminus C_a^\mathcal{A}) \cap C_b^\mathcal{B}|\cdot \frac{1}{c_b} \right)$, for any $i \in C_a^\mathcal{A} \cap C_b^\mathcal{B}$.
+\end{remark}
+
+\begin{proof}
+   In order to calculate the Element-Centric Similarity between partitions $\mathcal{A}$ and $\mathcal{B}$ in the point $i$, we must use the formula as described in the Equation \ref{eq:def-ecs}.
+
+   To define $p_{ij}^{\mathcal{A}}$ and $p_{ij}^{\mathcal{B}}$, we must explore all four cases of labeling the point $j$. 
+    
+   \textbf{Case 1:} $j \in C_a^{\mathcal{A}} \cap C_b^{\mathcal{B}}$ ($j$ belongs to the same cluster as $i$ in both partitions.)
+
+   Using the formula from \ref{eq:affinity-disjoin}, we have $\displaystyle
+    \begin{cases}
+        p_{ij}^\mathcal{A} &= \frac{\alpha}{c_a} \\
+        p_{ij}^\mathcal{B} &= \frac{\alpha}{c_b} 
+    \end{cases}$. Therefore, 
+    \[ p_{ij}^\mathcal{A} - p_{ij}^\mathcal{B} = \alpha \left(\frac{1}{c_a} - \frac{1}{c_b}\right) .\]
+
+    This equation also holds when $j = i$, as proven in Remark \ref{remark:pii}.
+
+    \textbf{Case 2:} $j \in C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})$ ($j$ belongs to the same cluster as $i$ only in the first partition.)
+
+   Using the formula from \ref{eq:affinity-disjoin}, we have $\displaystyle
+    \begin{cases}
+        p_{ij}^\mathcal{A} &= \frac{\alpha}{c_a} \\
+        p_{ij}^\mathcal{B} &= 0
+    \end{cases}$. Therefore, 
+    \[ p_{ij}^\mathcal{A} - p_{ij}^\mathcal{B} = \alpha \frac{1}{c_a} .\]
+
+    \textbf{Case 3:} $j \in (\mathcal{P} \setminus C_a^\mathcal{A}) \cap  C_b^{\mathcal{B}}$ ($j$ belongs to the same cluster as $i$ only in the second partition.)
+
+   Using the formula from \ref{eq:affinity-disjoin}, we have $\displaystyle
+    \begin{cases}
+        p_{ij}^\mathcal{A} &= 0 \\
+        p_{ij}^\mathcal{B} &=\frac{\alpha}{c_b}
+    \end{cases}$. Therefore, 
+    \[ p_{ij}^\mathcal{A} - p_{ij}^\mathcal{B} = \alpha \frac{1}{c_b} .\]
+
+    \textbf{Case 4:} $j \in (\mathcal{P} \setminus C_a^\mathcal{A}) \cap  (\mathcal{P} \setminus C_b^{\mathcal{B}})$ ($j$ belongs to a different cluster than $i$ both partitions.)
+
+   Using the formula from \ref{eq:affinity-disjoin}, we have $\displaystyle
+    \begin{cases}
+        p_{ij}^\mathcal{A} &= 0 \\
+        p_{ij}^\mathcal{B} &=0
+    \end{cases}$. Therefore, 
+    \[ p_{ij}^\mathcal{A} - p_{ij}^\mathcal{B} = 0 .\]
+
+
+    These four cases are exhaustive so $\displaystyle \sum_{j = 1}^N |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} |$ will be equivalent to % according to \ref{eq:def-ecs}, $\mathcal{S}_i(\mathcal{A}, \mathcal{B})$ will be:
+
+    \[
+        \begin{aligned}
+            &\sum_{j \in C_a^{\mathcal{A}} \cap C_b^{\mathcal{B}}} |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | + \sum_{j \in C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})} |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | + \sum_{j \in (\mathcal{P} \setminus C_a^\mathcal{A}) \cap  C_b^{\mathcal{B}}} |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | + \sum_{j \in (\mathcal{P} \setminus C_a^\mathcal{A}) \cap  (\mathcal{P} \setminus C_b^{\mathcal{B}})} |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | = \\
+            %
+            = &\sum_{j \in C_a^{\mathcal{A}} \cap C_b^{\mathcal{B}}} \left|\alpha\left(\frac{1}{c_a} - \frac{1}{c_b}\right)\right| + \sum_{j \in C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})} \left|\alpha\frac{1}{c_a}\right| + \sum_{j \in (\mathcal{P} \setminus C_a^\mathcal{A}) \cap  C_b^{\mathcal{B}}} \left|\alpha\frac{1}{c_b}\right| + \sum_{j \in (\mathcal{P} \setminus C_a^\mathcal{A}) \cap  (\mathcal{P} \setminus C_b^{\mathcal{B}}} |0 | = \\
+            %
+            = &\alpha\sum_{j \in C_a^{\mathcal{A}} \cap C_b^{\mathcal{B}}} \left|\frac{1}{c_a} - \frac{1}{c_b}\right| + \alpha\sum_{j \in C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})} \left|\frac{1}{c_a}\right| + \alpha\sum_{j \in (\mathcal{P} \setminus C_a^\mathcal{A}) \cap  C_b^{\mathcal{B}}} \left|\frac{1}{c_b}\right| = \\
+            %
+            = &\alpha\left( |C_a^\mathcal{A} \cap C_b^\mathcal{B}|\cdot \left|\frac{1}{c_a} - \frac{1}{c_b}\right| + |C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})| \cdot \frac{1}{c_a} + |(\mathcal{P} \setminus C_a^\mathcal{A}) \cap C_b^\mathcal{B}|\cdot \frac{1}{c_b} \right)
+        \end{aligned}     
+    \]
+
+    Replacing this result in the formula \ref{eq:def-ecs} will lead to
+    \[
+    \begin{aligned}
+        S_i (\mathcal{A}, \mathcal{B}) &= 1 - \frac{1}{2 \alpha} \sum_{j = 1}^N |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} |  \\
+        &= 1 - \frac{1}{2\alpha}\alpha\left( |C_a^\mathcal{A} \cap C_b^\mathcal{B}|\cdot \left|\frac{1}{c_a} - \frac{1}{c_b}\right| + |C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})| \cdot \frac{1}{c_a} + |(\mathcal{P} \setminus C_a^\mathcal{A}) \cap C_b^\mathcal{B}|\cdot \frac{1}{c_b} \right) \\
+        &= 1 - \frac{1}{2}\left( |C_a^\mathcal{A} \cap C_b^\mathcal{B}|\cdot \left|\frac{1}{c_a} - \frac{1}{c_b}\right| + |C_a^\mathcal{A} \cap (\mathcal{P} \setminus C_b^{\mathcal{B}})| \cdot \frac{1}{c_a} + |(\mathcal{P} \setminus C_a^\mathcal{A}) \cap C_b^\mathcal{B}|\cdot \frac{1}{c_b} \right)
+    \end{aligned} ,
+    \]
+    which is the desired output.
+\end{proof}
+
+The statement of the Remark \ref{remark:ecs-constant} leads to the immediate conclusion that the ECS score is the same for points that have the same cluster labels for both partitions. This observation is important, as it indicates that the number of unique ECS values is $|\mathcal{A}| \cdot |\mathcal{B}|$, where $|\mathcal{A}|$ and $|\mathcal{B}|$ refer to the number of clusters of the partitions.
+
+Given that the number of points grows exponentially faster than the number of clusters, it is more efficient to calculate the unique ECS values rather than to perform the same computations for all pairs of points.
+
+In ClustAssess we implemented this optimized version of calculating the Element-Centric similarity, which brings a significant speed-up, as well as a low-memory usage, as it will be seen in Chapter 4.
+
+\subsection{Weighted ECC}
+There is no guarantee that the list of partitions used for calculating the Element-Centric Consistency will not contain duplicates. This is can be met in different scenarios, such as calculating the consistency of the results that multiple clustering algorithms produce.
+
+Using the original approach will lead to redundant calculations: having a list $\mathcal{L}$ of $n$ partitions, $x$ of them being duplicates, will lead to $(x-1) \cdot (n-1)$ computation of the ECS score that have already been done. Also, this allows calculating the ECS between a partition and its duplicate, whose result is already known to be 1.
+
+This can be solved by attaching a weight to each partition to indicate the number of duplicates. This way, the ECS is calculated once and multiplicated times the number of combination between the number of duplicates: $\mathcal{S}(\mathcal{L}_i, \mathcal{L}_j) \cdot w_i \cdot w_j$, where $w$ denotes the weights array. The procedure is detailed in Algorithm \ref{alg:weighted-ecc}. 
+
+\begin{algorithm}[h!] 
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \SetKwInOut{Parameters}{parameters}
+    \Input{$partList$: the list of dijsoint partitions; each partittion is represented as an array of labels; the partitions should have the same length. \\ $weights$: the weight array that contains the number of duplicates \\ associated to each partition.}
+    \Output{the Element-Centric Consistency of the list}
+
+    $nPartitions \gets \text{size}(partList)$; \\
+    $nTotalPartitions \gets \text{sum}(weights)$; \tcp*{includes duplicates}
+    $ecc \gets \textbf{0}$; \\
+    \tcp{Calculate the ECS between different partitions}
+    \For{i = 1 \KwTo nPartitions - 1}{
+        \For{j = i + 1 \KwTo nPartitions}{
+            $ecc \gets ecc + \text{ecs}(partList[i],partList[j]) * weights[i] * weights[j];$
+        }
+    }
+    
+    \tcp{Calculate the ECS between duplicates}
+    $nDuplicatesECS \gets 0$; \\
+    \For{i = 1 \KwTo nPartitions}{$nDuplicatesECS \gets nDuplicatesECS + weights[i] * (weights[i] - 1) / 2;$}
+    $ecc \gets ecc + nDuplicatesECS * \textbf{1};$ \\
+    \tcp{Normalize the score in the range [0, 1]}
+    $ecc \gets ecc / (nTotalPartitions * (nTotalPartitions - 1) / 2);$ \\
+    \Return{ecc}
+    \caption{Weighted Element-Centric Consistency}
+    \label{alg:weighted-ecc}
+\end{algorithm}
+
+\subsection{Partition merging}
+Although the weighted version of the ECC score is more efficient, it might be difficult for the user to detect the duplicates and create the weights array.
+
+In the ClustAssess package we developed the ECC calculation method such that it automatically identifies the partitions that are identical and merges them. The merge operation involves removing the duplicates and updating the weights array.
+
+To identify the identical partitions, we chose to use a method that should be more efficient than calculating the ECS and checking whether the score is one or not. Given two partitions, we calculate their contigency table. A contingency table is a matrix where each row indicates a cluster from the first partition and each column a cluster from the second one. The value at the index $[i, j]$ indicates the number of elements that are in the $i^\text{th}$ cluster from the first partition and in the $j^\text{th}$ group from the second one simoultaneously.
+
+To determine if the given clusterings match, we must verify if there is any row or column which has more than one entry with non-zero values. If this is the case, that translates to an imperfect match between the two groups and subsequently to the conclusion that the partitions are different.
+
+\subsubsection{ECS threshold}
+There are numerous cases when two partitions do not perfectly match, but are virtually identical: from thousands of points, only a few of them are labelled in different clusters. We can visually understand this by looking at the panels S17 and M18 from Figure \ref{fig:s4-m3-res}. They look like they are the same partition, but the contingency table from Figure \ref{fig:s4-m3-cont} indicates that there are three places of imperfect matching.
+
+This poses the question whether these partitions should be considered different or identical when calculating the ECC. To answer this issue, we introduced an additional parameter named \textit{ECS threshold}, which allows relaxing the condition of identifying a partition as duplicate of another.
+
+The difference from the identical matching is that, instead of looking for perfect contingency tables, we calculate the mean ECS between the partitions. If the value is above the threshold, we perform the same steps as the ones from the previous case.
+
+\subsection{Parallelization support}
+It can be noticed that the calculation of the ECS between every possible pair from the partition list can be done independently, which opens up the possibility to perform this operation concurrently.
+
+To allow parallel execution of the ECS calculation we used the R \verb|foreach| packge \footnote{GitHub official repository: \url{https://github.com/RevolutionAnalytics/foreach}}. Using the PSOCK option, more R instances that are independent from the original process and that can run simoultaneously. Each R instance recieves the partition list and the pairs for which the ECS must be calculated, and afterwards the processes are launched in parallel. The results are summed and the mean is calculated as in the sequential case.
+
+\section{Stability assessment pipeline}
+
+\subsection{Assessing the dimensionality reduction}
+
+\subsection{Assessing the graph construction}
+
+\subsection{Assessing the graph clustering}

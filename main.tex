@@ -16,6 +16,9 @@
 \usepackage{amsthm}
 \usepackage[table,xcdraw]{xcolor}
 \usepackage{tablefootnote}
+\usepackage{parskip}
+\usepackage[ruled,vlined,linesnumbered,resetcount]{algorithm2e}
+
 \graphicspath{{./images/}}
 
 % includes options
@@ -26,12 +29,12 @@
             bottom=2cm,
  }
 \graphicspath{{images/}}        % path where the images are located
-\setlength{\parindent}{1cm}     % paragraph indentation
+\setlength\parindent{0pt}
 
 % other options
-\linespread{1.5}                % space between lines
+\linespread{1.25}                % space between lines
 \renewcommand*\contentsname{Cuprins}    % table of contents name
-
+\newtheorem{remark}{Remark}
 % the document content
 \begin{document}
     % macros (global)
