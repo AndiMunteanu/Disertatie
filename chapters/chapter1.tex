@@ -97,20 +97,22 @@ One of the main differences between Louvain and SLM relates to the convergence o
 
     For disjoint partitions, the formula is simplified to the following form:
 
-    \[ 
+    \begin{equation} \label{eq:affinity-disjoin}
         p_{ij} = 
         \begin{cases}
             0, \text{if i and j don't belong to the same cluster} \\
             \frac{\alpha}{|C_\beta|}, \text{if i and j belong to the cluster } \beta \\
             1 - \alpha + \frac{\alpha}{|C_\beta|}, \text{if } i = j
         \end{cases}
-    \]
+    \end{equation}
     
     \subsection{Description about how it works}
 
     Element-Centric similarity (ECS) is a new clustering comparison measure proposed by Gates et al \cite{Gates2019}. This score is based on calculating the L1 distance between the affinity matrices that are associated with the two clusterings:
 
-    \[ S_i (\mathcal{A}, \mathcal{B}) = 1 - \frac{1}{2 \alpha} \sum_{j = 1}^N |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | \]
+    \begin{equation} \label{eq:def-ecs}
+        S_i (\mathcal{A}, \mathcal{B}) = 1 - \frac{1}{2 \alpha} \sum_{j = 1}^N |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | 
+    \end{equation}
 
     A major aspect that differentiate ECS from the other metrics is that it is element-centric and not cluster-centric, that is the score is calculated individually for each element of the partition. The overall score can be calculated as the mean.
 
