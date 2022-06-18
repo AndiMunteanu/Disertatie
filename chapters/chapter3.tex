@@ -200,6 +200,16 @@ It can be noticed that the calculation of the ECS between every possible pair fr
 To allow parallel execution of the ECS calculation we used the R \verb|foreach| packge \footnote{GitHub official repository: \url{https://github.com/RevolutionAnalytics/foreach}}. Using the PSOCK option, more R instances that are independent from the original process and that can run simoultaneously. Each R instance recieves the partition list and the pairs for which the ECS must be calculated, and afterwards the processes are launched in parallel. The results are summed and the mean is calculated as in the sequential case.
 
 \section{Stability assessment pipeline}
+Another major contribution brought by this package is the creation of a pipeline that evaluates the stability of the clustering.
+
+We note that the purpose of the pipeline is not to identify optimal values of different parameters, but to provide visual tools that the user can use in order to assess the stability of different parameters involved in the clustering.
+
+As we mentioned at the beginning of the chapter, our expectation is to achieve similar results when only the random seed is changed. Thus, we define cluster stability as the robustness of the clustering output at the change of seed values. The stability will be measured by running the clustering pipeline multiple times with different random seeds. The Element-Centric Consistency score is then calculated and used as an indicator for robustness: the confidence in the robustness at seed changes grows proportionate with the consistency of the list of the obtained partitions.
+
+The stability assessment pipeline follows the PhenoGraph \cite{Levine2015} algorithm. The code is wrapped on the Seurat implementation of the algorithm (see Chapter 2). Although this pipeline is targeting the assessment of biological data, the PhenoGraph algorithm is agnostic to the origin of the data, therefore the pipeline could be adjusted to more general use-cases.
+
+The stability pipeline performs the assessment of the stability of some of the parameters presented in the previous chapter that have an impact over the clustering output. The following sections describe how the assessment is performed and follow the three-step structure of the PhenoGraph algorithm. We will use the Cuomo \cite{Cuomo2020} dataset as an example of using the pipeline. A more code-oriented presentation is made available in the \href{https://core-bioinformatics.github.io/ClustAssess/articles/stability-based-parameter-assessment.html}{following vignette} that is part of the ClustAssess package.
+
 
 \subsection{Assessing the dimensionality reduction}
 
