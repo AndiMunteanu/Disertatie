@@ -1,23 +1,23 @@
 \chapter{Description of methods}
 
-This chapter contains informations about the methods used for graph clustering, the sequencing and processing the biological data and eventualy mentions of other works / papers that were focusing on assessing the robustness on changing the seed.
+This chapter focuses on the methods used for graph clustering used in the context of processing/ analysing sequencing data. This leads seamlessly into a compare and contrast exercise on other approaches focusing on assessing the robustness of clustering results, mainly on the variation of the random seed.
 
 \section{Graph Clustering}
 
-\subsection{Short intro about what graph clustering is}
+\subsection*{Short intro about what graph clustering is}
 
-\subsection{Why graph clustering instead other traditional methods such as k-means, density based techniques etc}
+\subsection*{Graph clustering vs traditional methods e.g. k-means, density based techniques}
 
-\subsection{Types of graph clustering}
+\subsection*{Types of graph clustering}
 
-\subsection{Community detection - Optimizing the quality function}
+\subsection*{Community detection - Optimizing the quality function}
 
-\subsection{Louvain}
-The Louvain algorithm \cite{Blondel2008b} is the state-of-the art community detection algorithm that uses an iterative greedy approach. The method can be used to optimize a partition provided by the user, but the default behaviour is to initially assign each node to its own cluster.
-Each iteration is described by two repeating steps. The first step (called local moving heuristic) is to change the partition structure in a greedy manner. For each node the algorithm evaluates whether the change of its label could improve the overall quality or not. If so, the node moves to the cluster that provides the greatest increase of quality. These operations are repeated until no change is longer possible. The second step is shrinking the graph, meaning each community with a super-node. Thus, the number of nodes of the resulting graph will be the same as the number of clusters that were identified in the first step. The weight of the edges are also recalculated using the sum of inter-cluster weights of the original graph.
+\subsection*{Louvain graph clustering}
+The Louvain algorithm \cite{Blondel2008b} is the state-of-the art community detection algorithm; it is based on an iterative greedy approach. The method can be used to optimize an \textit{a priori} user-defined partition; the default behaviour is to initially assign each node to its own cluster.
+Each iteration comprises two repeating steps. The first step (local moving heuristic) is to change the partition structure in a greedy manner. For each node the algorithm evaluates whether a label-change would improve the overall quality of the partition. If affirmative, the node is reassigned to the cluster that provides the greatest increase of quality. These assessments/ steps are repeated until convergence. The second step is shrinking the graph, meaning each community with a super-node. Thus, the number of super-nodes in the resulting graph will be the same as the number of clusters identified in the first step. The weights of the edges are also recalculated using the sum of inter-cluster weights of the original graph.
 These two steps are repeated until the partition doesn't change after the first phase.
 
-The algorithm can use multiple runs, when the current iterations takes as starting point the partition that is obtained in the previous one. The algorithm is said to reach convergence if no change is noticed at two consecutive iterations.
+The algorithm can rely on multiple runs, when the current iterations takes as starting point the partition that is obtained in the previous one. The algorithm is said to reach convergence if no change is noticed at two consecutive iterations.
 
 Although it is a greedy algorithm, Louvain proved it can obtain qualitative clusters. Another advantage of the method is computational efficiency: the average time complexity is $O(n \log n)$, where $n$ is the number of nodes.
 
@@ -35,6 +35,13 @@ The Louvain algorithm (and its refined version) ensure local optimal node moveme
 One of the main differences between Louvain and SLM relates to the convergence of the results. Louvain (and its refined variant) quickly converge after a few iterations, as no community merging or node moving leads to better results. However, SLM, by splitting the communities into subclusters and moving a group of nodes, can improve its results after multiple runs. The downside is that the lack of convergence will lead to more execution time.
 
 \subsection{Leiden}
+In the Leiden paper \cite{Traag2019a}, Traag, van Eck and Waltman present a limitation of the Louvain algorithm, which relates to the degradation of the communities structure. During the local movement phase, a situation can occur when the designated node acts like a bridge inside its community. Thus, performing the movement to other cluster will results in disconnecting the original group. The Louvain algorithm doesn't have any mechanism to prevent this behaviour. The Leiden paper furtherly states that the structure becomes worse for each iteration.
+
+The authors proposed a new algorithm named Leiden, which introduces an additional refinement step after the local moving phase. The approach is similar to SLM, namely it splits each cluster in sub-communities. The difference is that Leiden uses a modified version of the local moving heuristic in order to obtain well-defined sub-groups and to prevent the creation of disconnected communities. Inside each community, the points are initially assigned to singleton clusters. Afterwards, the algorithm takes each node and identifies the well-connected communities where it could be moved. A group is considered to be well-connected if it can be split into two sub-groups such as the number of edge between them exceeds a threshold related to the resolution parameter. Once the well-connected groups are identified, the algorithm doesn't pick the one with the highest quality gain. Rather it assigns a probability for each community proportionate with the increase. This approach allows a better exploration of the search space. Once the sub-communities are formed, the algorithm performs in a similar way with SLM.
+
+Another improvement brought in the Leiden algorithm relates to the movement heuristic. The Louvain algorithm looks for quality improvements for all nodes. Leiden uses a queue where it stores the nodes that should be evaluated. If a node brings a quality improvement by moving it to another community, its neighbours that are in other groups are appended to the queue. Using this approach allows only the nodes that are affected by the movement to be evaluated.
+
+Although there is no formal proof, Leiden's performance was empirically observed to be linear to the number of nodes. However, the authors of the algorithms bring guarantees about the characteristics of the obtained partitions, such as $\gamma$-separation, $\gamma$-connectivity, node optimality and subpartition $\gamma$-density.
 
 \section{PhenoGraph pipeline}
     PhenoGraph \cite{Levine2015} is a pipeline proposed by Levine et al. to process biological data and obtain a clustering that is interpreted as different cell types. The pipeline is consists of the following steps:

@@ -21,7 +21,7 @@ This chapter will contain a description of the package components that I contrib
 As far as we are concerned, the Python package \verb|CluSim| \footnote{GitHub official repository: \url{https://github.com/Hoosier-Clusters/clusim}} \cite{Gates2019b}, which is developed and maintained by the authors of the ECS paper \cite{Gates2019}, is the only official source that contains an implementation of the Element-Centric Similarity measure.
 
 
-The ClustAssess package offers an R implementation of this score. The implementation follows the steps presented in the article presented above. For each partition, the cluster affiliation graph is determined, followed by calculating the cluster-induced element graph and teh affinity matrix. Once the affinity matrices are calculated, the ECS can be calculated as the L1 distance between them.
+The \verb|ClustAssess| package offers an R implementation of this score. The implementation follows the steps presented in the article presented above. For each partition, the cluster affiliation graph is determined, followed by calculating the cluster-induced element graph and teh affinity matrix. Once the affinity matrices are calculated, the ECS can be calculated as the L1 distance between them.
 
 \subsection{Optimising the calculation of the ECS}
 However, as stated in the first chapter, computing the PPR matrix for flat disjoint partitions can be done using the formula \ref{eq:affinity-disjoin}. As it can be observed, for each pair of points, there can only be three values, all of them being independent on the nature of the points. We will use this observation to prove that the calculation of the ECS score can be optimised.
@@ -142,7 +142,7 @@ The statement of the Remark \ref{remark:ecs-constant} leads to the immediate con
 
 Given that the number of points grows exponentially faster than the number of clusters, it is more efficient to calculate the unique ECS values rather than to perform the same computations for all pairs of points.
 
-In ClustAssess we implemented this optimized version of calculating the Element-Centric similarity, which brings a significant speed-up, as well as a low-memory usage, as it will be seen in Chapter 4.
+In \verb|ClustAssess| we implemented this optimized version of calculating the Element-Centric similarity, which brings a significant speed-up, as well as a low-memory usage, as it will be seen in Chapter 4.
 
 \subsection{Weighted ECC}
 There is no guarantee that the list of partitions used for calculating the Element-Centric Consistency will not contain duplicates. This is can be met in different scenarios, such as calculating the consistency of the results that multiple clustering algorithms produce.
@@ -178,12 +178,12 @@ This can be solved by attaching a weight to each partition to indicate the numbe
     \label{alg:weighted-ecc}
 \end{algorithm}
 
-\subsection{Partition merging}
+\subsection{Partition merging} \label{sec:part-merge}
 Although the weighted version of the ECC score is more efficient, it might be difficult for the user to detect the duplicates and create the weights array.
 
-In the ClustAssess package we developed the ECC calculation method such that it automatically identifies the partitions that are identical and merges them. The merge operation involves removing the duplicates and updating the weights array.
+In the \verb|ClustAssess| package we developed the ECC calculation method such that it automatically identifies the partitions that are identical and merges them. The merge operation involves removing the duplicates and updating the weights array.
 
-To identify the identical partitions, we chose to use a method that should be more efficient than calculating the ECS and checking whether the score is one or not. Given two partitions, we calculate their contigency table. A contingency table is a matrix where each row indicates a cluster from the first partition and each column a cluster from the second one. The value at the index $[i, j]$ indicates the number of elements that are in the $i^\text{th}$ cluster from the first partition and in the $j^\text{th}$ group from the second one simoultaneously.
+To identify the identical partitions, we chose to use a method that should be more efficient than calculating the ECS and checking whether the score is one or not. Given two partitions, we calculate their contingency table. A contingency table is a matrix where each row indicates a cluster from the first partition and each column a cluster from the second one. The value at the index $[i, j]$ indicates the number of elements that are in the $i^\text{th}$ cluster from the first partition and in the $j^\text{th}$ group from the second one simultaneously.
 
 To determine if the given clusterings match, we must verify if there is any row or column which has more than one entry with non-zero values. If this is the case, that translates to an imperfect match between the two groups and subsequently to the conclusion that the partitions are different.
 
@@ -194,7 +194,7 @@ This poses the question whether these partitions should be considered different 
 
 The difference from the identical matching is that, instead of looking for perfect contingency tables, we calculate the mean ECS between the partitions. If the value is above the threshold, we perform the same steps as the ones from the previous case.
 
-\subsection{Parallelization support}
+\subsection{Parallelization support} \label{sec:paral}
 It can be noticed that the calculation of the ECS between every possible pair from the partition list can be done independently, which opens up the possibility to perform this operation concurrently.
 
 To allow parallel execution of the ECS calculation we used the R \verb|foreach| packge \footnote{GitHub official repository: \url{https://github.com/RevolutionAnalytics/foreach}}. Using the PSOCK option, more R instances that are independent from the original process and that can run simoultaneously. Each R instance recieves the partition list and the pairs for which the ECS must be calculated, and afterwards the processes are launched in parallel. The results are summed and the mean is calculated as in the sequential case.
@@ -208,7 +208,7 @@ As we mentioned at the beginning of the chapter, our expectation is to achieve s
 
 The stability assessment pipeline follows the PhenoGraph \cite{Levine2015} algorithm. The code is wrapped on the Seurat implementation of the algorithm (see Chapter 2). Although this pipeline is targeting the assessment of biological data, the PhenoGraph algorithm is agnostic to the origin of the data, therefore the pipeline could be adjusted to more general use-cases.
 
-The stability pipeline performs the assessment of the stability of some of the parameters presented in the previous chapter that have an impact over the clustering output. The following sections describe how the assessment is performed and follow the three-step structure of the PhenoGraph algorithm. We will use the Cuomo \cite{Cuomo2020} dataset as an example of using the pipeline. A more code-oriented presentation is made available in the \href{https://core-bioinformatics.github.io/ClustAssess/articles/stability-based-parameter-assessment.html}{following vignette} that is part of the ClustAssess package.
+The stability pipeline performs the assessment of the stability of some of the parameters presented in the previous chapter that have an impact over the clustering output. The following sections describe how the assessment is performed and follow the three-step structure of the PhenoGraph algorithm. We will use the Cuomo \cite{Cuomo2020} dataset as an example of using the pipeline. A more code-oriented presentation is made available in the \href{https://core-bioinformatics.github.io/ClustAssess/articles/stability-based-parameter-assessment.html}{following vignette} that is part of the \verb|ClustAssess| package.
 
 
 \subsection{Assessing the dimensionality reduction}
@@ -264,7 +264,7 @@ Moving on the graph construction step, the most important parameters are the fol
 \end{itemize}
 
 Our package does not assess the change of the distance metric, as the \verb|RANN| package does not currently have support for changing this parameter.
-For this step, ClustAssess can output three types of plots.
+For this step, \verb|ClustAssess| can output three types of plots.
 
 \subsubsection{Connected components target}
 Since we are using community detection methods for graph clustering, it is unlikely (if not impossible) to obtain a cluster that contains two connected components. This type of merging (or moving a node to a cluster from another connected component) does not bring any improvement on the value of the quality function. One exception is related to the singleton clusters, which can be merged inside one single group or can be appended to the community in the closest proximity.
@@ -308,7 +308,7 @@ For example, if Figure \ref{fig:ca-nn-ecc} we have four configurations as a resu
 \end{figure}
 
 \subsection{Assessing the graph clustering}
-Once the dimensionality reduction is performed and the graph is built, the remaining task is to assess the stability of the clustering. ClustAssess offers visual tools to evaluate the consistency of the community detection method, as well as of its most relevant parameter, the resolution.
+Once the dimensionality reduction is performed and the graph is built, the remaining task is to assess the stability of the clustering. \verb|ClustAssess| offers visual tools to evaluate the consistency of the community detection method, as well as of its most relevant parameter, the resolution.
 
 \subsubsection{Clustering method stability}
 ClustAssess uses Seurat for the implementation of the Phenograph pipeline, thus the available community detection methods are Louvain \cite{Blondel2008b}, Louvain with multi-level refinement \cite{Rotta2011}, SLM \cite{Waltman2013} and Leiden \cite{Traag2019a}. The following plot illustrates, for a given range for the resolution parameter, the distribution of the ECC. The procedure is slightly different from the previous steps: instead of taking all the partitions obtained after multiple runs with different seeds, we extract the number of clusters that appears the most frequent and we calculate the consistency of the clusterings having that number of groups. Above each boxplot the most common number of clusters will be displayed. This enables comparing the community detection methods not only by stability, but also by the number of clusters they will most probably output.
@@ -322,7 +322,7 @@ An example is provided in Figure \ref{fig:ca-clust-dif-boxplot} where the stabil
 \end{figure}
 
 \subsubsection{Areas of clustering consistency}
-To reinforce the previous plot, ClustAssess also offers support for visualising the distribution of the ECC score on an UMAP representation. The plot is faceted, so each column will be associated with one clustering method and each row with a resolution value. This plot can serve as a tool to identify the areas that are unstable, as well to assess whether the instability occurs at all algorithms in the same areas or not. We note that, in this case, the ECC will be calculated across all partitions that are obtained without filtering by a specific number of clusters.
+To reinforce the previous plot, \verb|ClustAssess| also offers support for visualising the distribution of the ECC score on an UMAP representation. The plot is faceted, so each column will be associated with one clustering method and each row with a resolution value. This plot can serve as a tool to identify the areas that are unstable, as well to assess whether the instability occurs at all algorithms in the same areas or not. We note that, in this case, the ECC will be calculated across all partitions that are obtained without filtering by a specific number of clusters.
 
 An example is provided in Figure \ref{fig:ca-clust-dif-facet}. It's noticeable how Leiden's behaviour is different from the other three: the main area of instability is located in the upper island. Louvain also has more incosistent areas when resolution is greater than 0.6. SLM and Louvain refined seem to behave similarly with few exceptions: for resolution 0.5 or 0.7, where the latter has an additional unstable region. The conclusion the user could draw is that SLM has the most robust behaviour, as there are a few number of unstable areas; in addition to that, those areas are unstable in the other algorithms as well.
 

@@ -69,24 +69,26 @@ The UMAP algorithm is signifcantly affected by three parameters:
 
 Monocle and Seurat agree on the cosine measurement as the distance metric, but the other two parameters have different values in these packages: the minimum distance is 0.3 in Seurat and 0.1 in Monocle, and the number of neighbours is 30 in Seurat and 15 in Monocle. Figures \ref{fig:s4-m3-min-dist} and \ref{fig:s4-m3-n-neigh-umap} highlight the effect of these parameters on the toplogy of the data. Aligning their values for the two packages leads to identical low dimensional representation of the cells, as it can be seen in panels S7 and M8 of the figure \ref{fig:s4-m3-n-neigh-umap}.
 
+\begin{landscape}
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_pca_genes.png}}
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_pca_genes.png}}
     \caption{\label{fig:s4-m3-pca}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
 
 
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_umap_min_dist.png}}
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_umap_min_dist.png}}
     \caption{\label{fig:s4-m3-min-dist}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_umap_n_neigh.png}}
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_umap_n_neigh.png}}
     \caption{\label{fig:s4-m3-n-neigh-umap}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
+\end{landscape}
 
 \subsection{Graph construction}
 Both packages use the kNN-based method of building the graph based on the reduced space. The calculation of the nearest neighbours is done by the method implemented in the \verb|RANN| package. The output is affected by the embedding that is used as a base for the graph construction, the number of neighbours (or simply \textit{k}) and the graph type.
