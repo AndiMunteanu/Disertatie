@@ -12,7 +12,7 @@ This chapter focuses on the methods used for graph clustering used in the contex
 
 \subsection*{Community detection - Optimizing the quality function}
 
-\subsection*{Louvain graph clustering}
+\subsection{Louvain graph clustering}
 The Louvain algorithm \cite{Blondel2008b} is the state-of-the art community detection algorithm; it is based on an iterative greedy approach. The method can be used to optimize an \textit{a priori} user-defined partition; the default behaviour is to initially assign each node to its own cluster.
 Each iteration comprises two repeating steps. The first step (local moving heuristic) is to change the partition structure in a greedy manner. For each node the algorithm evaluates whether a label-change would improve the overall quality of the partition. If affirmative, the node is reassigned to the cluster that provides the greatest increase of quality. These assessments/ steps are repeated until convergence. The second step is shrinking the graph, meaning each community with a super-node. Thus, the number of super-nodes in the resulting graph will be the same as the number of clusters identified in the first step. The weights of the edges are also recalculated using the sum of inter-cluster weights of the original graph.
 These two steps are repeated until the partition doesn't change after the first phase.

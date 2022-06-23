@@ -337,7 +337,13 @@ One of the limitation of the community detection method is that there is no dire
 
 The following plot is meant to illustrate this correspondence between the two parameters. On the X-axis different resolution values provided by the user are displayed, and the Y-axis contains the number of clusters. The correspondence is displayed using a scatter plot. One immediate use-case for it is to identify the suitable resolution values to obtain a desired number of clusters. 
 
-This plot also offers additional information regarding the stability of the resolution parameter - number of clusters pair. Firstly, the point size is varying based on the frequency of the most common partition obtained when fixing the resolution and the number of clusters. Thus, large points are a measure for high stability, as they indicate that even if the seed is changed, the same partition will be obtained.
+This plot also offers additional information regarding the stability of the resolution parameter - number of clusters pair. Firstly, the point size is proportional to either the frequency of the most common partition or to the Element-Centric Consistency of the list of partitions which are obtained at different combinations of the pairs. The purpose of this information is to help the user evaluate whether the number of clusters obtained on a specific resolution value is robust to seed change or not.
+
+The colour gradient is used to illustrate the frequency of the partitions with a given number of clusters relative to the number of runs on a specific resolution value. The values associated with the colours should sum up to the value of one for each resolution. The purpose of this type of information is to provide statistical assurance on the stability assessments. Brighter colours (close to yellow) indicate a high frequency of that number of clusters, therefore the conclusion drawn from the point size could be trusted. However, the darker shades (close to dark blue) indicate that the conclusion is drawn on a sample too small to provide confidence in the results.
+
+The shape of points is meant to illustrate different configurations that are used for the clustering. In this case, a configuration contains the number of nearest neighbours used in the graph building, the graph type and the clustering algorithm.
+
+An example is provided in Figure \ref{fig:ca-1-kres}. We notice how increasing the resolution leads to partition with more clusters. For example, we can obtain 13 clusters for the configuration \verb|30_SNN_Louvain| for both resolutions 0.5 and 0.6. Also, for the same configuration, there is no resolution value that outputs partitions with 17 clusters. We must note that although there are situations when some numbers of clusters cannot be obtained, a more dense range should be used i.e. with a distance between values lower than 0.1 to draw this type of conclusions.
 
 \begin{figure}[H]
     \centering
@@ -346,6 +352,11 @@ This plot also offers additional information regarding the stability of the reso
         \includegraphics[width=0.5\linewidth]{images/ch3/3_1_kres_ECC.png}}
     \caption{\label{fig:ca-1-kres}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
+
+
+We note some cases of high stability indicated by both ECC and partition frequency, but not backed up by a relevant sample (see the points when resolution is 0.6 and the number of clusters 13). The plots also contains situations where the sample is high enough to trust the conclusion that a specific number of cluster is unstable (see the two configuration that lead to partitions with 17 clusters at resolution 1). The number of 18 clusters seems to be a robust choice for the configurations based on the SNN graph type.
+
+
 
 \subsubsection{Stability of the number of clusters}
 As can be observed from Figure \ref{fig:ca-1-kres}, multiple values of the resolution parameter can lead to partitions with the same number of clusters. Therefore, the task evolves from identifying stable pairs of resolution - number of clusters values to finding the number of clusters that is stable for any resolution value.

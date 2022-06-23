@@ -99,7 +99,11 @@ When it comes to calculating the Shared Nearest Neighbour graph, the two package
 
 \subsubsection{Self-neighbours}
 The major discrepancy between them relates to the usage of the self-neighbours. A \textit{self-neighbour} refers to label a point as a near neighbour of itself. Seurat uses self-neighbours, while Monocle doesn't.
-
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=5cm]{ch2/2_snn_issue_1.png}}
+    \caption{\label{fig:s4-m3-snn-1}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
 The importance of self-neighbours is illustrated on Figure \ref{fig:s4-m3-snn-1}. Setting $k = 5$, we calculate the neighbourhoods for the fourth and the fifth points. If we include the self-neighbour, we get:
 
 \[ \begin{aligned}
@@ -121,7 +125,11 @@ which indicates a perfect similarity between the two points. However, not includ
 \]
 
 The intersection between these neighbourhoods contains only three points, and the union contains seven. Thus, the weight assigned in this case would be $3 / 7 = 0.43$. Even if we decrease the value of $k$ from 5 to 4, the JSI would be $3 / 5 = 0.6$, which still does not reflect or indicate the reality of a perfect similarity between the two nodes.
-
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=5cm]{ch2/2_snn_issue_2.png}}
+    \caption{\label{fig:s4-m3-snn-2}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
 Another discrepancy is presented in the example provided in the Figure \ref{fig:s4-m3-snn-2}. Using the same value for $k$, we calculate the neighbourhoods for the first and the sixth point. If we include the self-neighbour, we get:
 
 \[ \begin{aligned}
@@ -159,41 +167,30 @@ The developers of the Monocle package decided to solve this limitation by perfor
 To prove the importance of these differences between the two implementations, we used the Cuomo \cite{Cuomo2020} dataset. The number of nearest neighbours is set to $k = 150$. Figure \ref{fig:s4-m3-snn-3} illustrates the difference between Monocle and Seurat results, shown for the neighbours of a point chosen from the datset.
 
 The first two panels present the weight distribution of the edges incident to the chosen point when using Seurat (A) and Monocle (B). The third panel contains the absolute difference of the weights of the edges incident to direct neighbours. As it can be observed, the maximum difference is not greater than 0.012, which suggests that the two implementations behave similarly for direct neighbours when $k$ is reasonably high. Panel D shows the distribution of the weights incident to the indirect neighbours. The colour scale indicates that there is a reasonable amount of points where the weight has a value that may have an impact in the overall structure of the final graph.
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{ch2/2_snn_issue_3.png}}
+    \caption{\label{fig:s4-m3-snn-3}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
 
 \subsubsection{Aligning the SNN implementations}
 After the analysis of the two implementations of the algorithm of building the SNN graph, we concluded that Seurat's is a more suitable choice.
 
 However, continuing the alignment process between the two packages, the graph type parameters is different. Seurat is building the SNN (the weighted) graph, while Monocle builds the unweighted one. The impact of this parameter is presented in the Figure \ref{fig:s4-m3-n-graph-type}, which suggests that using a weighted version of the same graph is influencing the clustering output.
 
+\begin{landscape}
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_graph_base.png}}
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_graph_base.png}}
     \caption{\label{fig:s4-m3-graph-base}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_graph_type.png}}
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_graph_type.png}}
     \caption{\label{fig:s4-m3-n-graph-type}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
-
-\begin{figure}[H]
-    \centering
-    \makebox[\textwidth][c]{\includegraphics[width=5cm]{ch2/2_snn_issue_1.png}}
-    \caption{\label{fig:s4-m3-snn-1}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \makebox[\textwidth][c]{\includegraphics[width=5cm]{ch2/2_snn_issue_2.png}}
-    \caption{\label{fig:s4-m3-snn-2}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{ch2/2_snn_issue_3.png}}
-    \caption{\label{fig:s4-m3-snn-3}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
-\end{figure}
+\end{landscape}
 
 \subsection{Graph clustering}
 Once the two packages reach an agreement on the low-dimensional reduced space and on the built graph, the clustering step must be aligned in order to obtain the same partitions. Firstly, both Seurat and Monocle should use the same clustering alogrithms. By default, Monocle clusters data using the Leiden algorithm and Seurat uses the Louvain algorithm. In Figure \ref{fig:s4-m3-graph-alg} we can observe how the two community detection methods produce a different output on the same graph.
@@ -203,32 +200,35 @@ Given the optimization nature of the clustering algorithm, the objective functio
 The parameter that directly influences the number of clusters is the resolution parameter. Monocle sets the resolution to $1e-4$ and Seurat to $0.8$. Figure \ref{fig:s4-m3-res} proves the intuition that using different resolution values outputs different number of clusters.
 
 Finally, the community detection algorithms are iterative, thus using a different number of iterations might lead to different results, especially in the cases where no convergence is reached. Monocle uses by default a number of 2 iterations, while Seurat 10. The difference between the clusterings can be seen in the left panel of Figure \ref{fig:s4-m3-cont}, which is a contingency table between the partitions obtained by the two package. To get a perfect match between the two, the matrix should be diagonal, but in our case there are three cases of non-zero entries outside the diagonal.
-
-\begin{figure}[H]
-    \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_graph_alg.png}}
-    \caption{\label{fig:s4-m3-graph-alg}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_quality_function.png}}
-    \caption{\label{fig:s4-m3-quality}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{ch2/2_resolution.png}}
-    \caption{\label{fig:s4-m3-res}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
-\end{figure}
-
-
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.3\linewidth]{ch2/2_cont_table.png}
     \includegraphics[width=0.3\linewidth]{ch2/2_final_clustering.png}
     \caption{\label{fig:s4-m3-cont}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
 \end{figure}
+
+\begin{landscape}
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_graph_alg.png}}
+    \caption{\label{fig:s4-m3-graph-alg}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_quality_function.png}}
+    \caption{\label{fig:s4-m3-quality}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_resolution.png}}
+    \caption{\label{fig:s4-m3-res}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+\end{figure}
+\end{landscape}
+
+
+
 
 \section{Summary}
 After performing all the aligning steps (summarized in Table \ref{tab:param}), both packages obtain the same partition (shown in the right display of Figure \ref{fig:s4-m3-cont}).
@@ -238,7 +238,7 @@ The conclusion is that the initial differences between Seurat and Monocle were c
 % Please add the following required packages to your document preamble:
 % \usepackage[table,xcdraw]{xcolor}
 % If you use beamer only pass "xcolor=table" option, i.e. \documentclass[xcolor=table]{beamer}
-\begin{table}[]
+\begin{table}[H]
     \resizebox{\textwidth}{!}{
         \begin{tabular}{|l|l|l|l|}
             \hline
