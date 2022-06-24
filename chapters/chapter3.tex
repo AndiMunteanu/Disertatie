@@ -21,7 +21,7 @@ This chapter will contain a description of the package components that I contrib
 As far as we are concerned, the Python package \verb|CluSim| \footnote{GitHub official repository: \url{https://github.com/Hoosier-Clusters/clusim}} \cite{Gates2019b}, which is developed and maintained by the authors of the ECS paper \cite{Gates2019}, is the only official source that contains an implementation of the Element-Centric Similarity measure.
 
 
-The \verb|ClustAssess| package offers an R implementation of this score. The implementation follows the steps presented in the article presented above. For each partition, the cluster affiliation graph is determined, followed by calculating the cluster-induced element graph and teh affinity matrix. Once the affinity matrices are calculated, the ECS can be calculated as the L1 distance between them.
+The \verb|ClustAssess| package offers an R implementation of this score. The implementation follows the steps presented in the article presented above. For each partition, the cluster affiliation graph is determined, followed by calculating the cluster-induced element graph and the affinity matrix. Once the affinity matrices are calculated, the ECS can be calculated as the L1 distance between them.
 
 \subsection{Optimising the calculation of the ECS}
 However, as stated in the first chapter, computing the PPR matrix for flat disjoint partitions can be done using the formula \ref{eq:affinity-disjoin}. As it can be observed, for each pair of points, there can only be three values, all of them being independent on the nature of the points. We will use this observation to prove that the calculation of the ECS score can be optimised.
@@ -149,12 +149,12 @@ There is no guarantee that the list of partitions used for calculating the Eleme
 
 Using the original approach will lead to redundant calculations: having a list $\mathcal{L}$ of $n$ partitions, $x$ of them being duplicates, will lead to $(x-1) \cdot (n-1)$ computation of the ECS score that have already been done. Also, this allows calculating the ECS between a partition and its duplicate, whose result is already known to be 1.
 
-This can be solved by attaching a weight to each partition to indicate the number of duplicates. This way, the ECS is calculated once and multiplicated times the number of combination between the number of duplicates: $\mathcal{S}(\mathcal{L}_i, \mathcal{L}_j) \cdot w_i \cdot w_j$, where $w$ denotes the weights array. The procedure is detailed in Algorithm \ref{alg:weighted-ecc}. 
+This can be solved by attaching a weight to each partition to indicate the number of duplicates. This way, the ECS is calculated once and multiplied times the number of combination between the number of duplicates: $\mathcal{S}(\mathcal{L}_i, \mathcal{L}_j) \cdot w_i \cdot w_j$, where $w$ denotes the weights array. The procedure is detailed in Algorithm \ref{alg:weighted-ecc}. 
 
 \begin{algorithm}[h!] 
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \SetKwInOut{Parameters}{parameters}
-    \Input{$partList$: the list of dijsoint partitions; each partittion is represented as an array of labels; the partitions should have the same length. \\ $weights$: the weight array that contains the number of duplicates \\ associated to each partition.}
+    \Input{$partList$: the list of disjoint partitions; each partition is represented as an array of labels; the partitions should have the same length. \\ $weights$: the weight array that contains the number of duplicates \\ associated to each partition.}
     \Output{the Element-Centric Consistency of the list}
 
     $nPartitions \gets \text{size}(partList)$; \\
@@ -227,12 +227,12 @@ The purpose of the plot is to identify the most consistent set of genes. In our 
 \subsubsection{Incremental similarity}
 An important task in the data processing is identifying the noise. In single-cell analysis, this task translates into identifying the noisy genes, namely the features not only do not contribute to cluster identification, but also can perturb the output. This plot relates to this tasks and shows the distribution of the ECS between the partitions that are obtained using the same feature set, but with different sizes. The grouping is done in a similar fashion with the one from the previous plot. Our approach is to translate incremental dissimilarity as an indicator of not reaching the noise. The goal is to identify the transition from the signal to the noise zone.
 
-Figure \ref{fig:ca-feat-comp} shows the Incremental similarity plot for the Cuomo data. As the title suggests, the comparison is done incrementally: first we compare the results obtained with 500 features with the ones when using 1000, then compare 1000 with 1500 and so on. It can be noticed that for MA\_HV the noise zone has not been reached, as the last blue boxplot suggests that adding the last genes has a signifcant impact upon the final clustering. As for the other two feature types, the high distribution of similarity in the last two groups of boxplots suggests that using more than 3000 genes would not lead to any information gain.
+Figure \ref{fig:ca-feat-comp} shows the Incremental similarity plot for the Cuomo data. As the title suggests, the comparison is done incrementally: first we compare the results obtained with 500 features with the ones when using 1000, then compare 1000 with 1500 and so on. It can be noticed that for MA\_HV the noise zone has not been reached, as the last blue boxplot suggests that adding the last genes has a significant impact upon the final clustering. As for the other two feature types, the high distribution of similarity in the last two groups of boxplots suggests that using more than 3000 genes would not lead to any information gain.
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{images/ch3/3_feat_comparative.png}}
-    \caption{\label{fig:ca-feat-comp}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-feat-comp}\textbf{Assessment of reaching the noise level using incremental similarity, obtained on 30 runs.} The colours indicates different feature sets, used for calculating the PCA: MA - most abundant genes (red); HV - highly variable genes (green); MA\_HV - intersection of MA and HV genes (blue). Above each boxplot we indicate the number of features within the subset. Each boxplot indicates the distribution of the ECS between the most frequent partitions obtained with incremental sizes. For this dataset, we notice no further changes for MA and HV sets at 2500-3000 genes, meaning the noise level was reached.}
 \end{figure}
 
 \subsubsection{Distribution of clusters}
@@ -243,16 +243,16 @@ An example of this plot can be seen in Figure \ref{fig:ca-feat-cluster}. Looking
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{images/ch3/3_feat_clusters_facet.png}}
-    \caption{\label{fig:ca-feat-cluster}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-feat-cluster}\textbf{Assessment of the stability using the cluster distribution} A grid figure where each plot is the cluster representation on a low-dimensional space for each subset of the three feature types. The sparse distribution of points for MA is motivating the high stability from the previous plots. }
 \end{figure}
 
 \subsubsection{Stability areas}
-This plot complements the previous one and displays the distribution of the ECC score on the UMAP topology, as it can be seen in Figure \ref{fig:ca-feat-stab}. This plot is taking advantage of the useful proprierty of the Element-Centric Similarity score and allows the user to identify the stable group of cells and the areas where the clustering in not consistent.
+This plot complements the previous one and displays the distribution of the ECC score on the UMAP topology, as it can be seen in Figure \ref{fig:ca-feat-stab}. This plot is taking advantage of the useful property of the Element-Centric Similarity score and allows the user to identify the stable group of cells and the areas where the clustering in not consistent.
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{images/ch3/3_feat_stab_facet.png}}
-    \caption{\label{fig:ca-feat-stab}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-feat-stab}\textbf{Assessment of the stability using the representation of the ECC distribution on a low dimensional space.} A grid figure where each plot is the ECC representation on a low-dimensional space for each subset of the three feature types.}
 \end{figure}
 
 \subsection{Assessing the graph construction}
@@ -278,7 +278,7 @@ The utility of this plot resides in the ability to determine the appropriate num
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{images/ch3/3_conn_comp.png}}
-    \caption{\label{fig:ca-conn-comp}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-conn-comp}\textbf{Connected components target plot, obtained on 30 runs} Each boxplot indicates the distribution of the number of connected components. As the number of neighbours increases, the graph connectivity also increases, which leads to fewer disconnected groups. PCA requires a small number of neighbours to reach a connected graph.}
 \end{figure}
 
 \subsubsection{Relationship between the number of clusters and number of neighbours}
@@ -289,7 +289,7 @@ An example is provided in Figure \ref{fig:ca-nn-k}. We can notice the same decre
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{images/ch3/3_nn_k.png}}
-    \caption{\label{fig:ca-nn-k}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-nn-k}\textbf{The number of clusters - number of neighbours relationship plot, obtained after 30 runs.} Similarly to the previous plot, the boxplots indicate the distribution of the obtained number of clusters. The tendency noticed in the connected components plots is also observed here. PCA tends to obtain fewer clusters than UMAP. }
 \end{figure}
 
 \subsubsection{Graph building stability}
@@ -304,7 +304,7 @@ For example, if Figure \ref{fig:ca-nn-ecc} we have four configurations as a resu
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{images/ch3/3_nn_ecc.png}}
-    \caption{\label{fig:ca-nn-ecc}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-nn-ecc}\textbf{The graph building stability plot, obtained after 30 runs.} The stability is measured by calculating the ECC of the partitions obtained across seed changes. The ECC distribution is displayed using boxplots. Each colour is associated with a configuration that contains the following parameters: base embedding, graph type and ECS threshold. UMAP is more affected by the change of random seed, hence lower ECC values than PCA. Increasing the number of neighbours improves the overall consistency. }
 \end{figure}
 
 \subsection{Assessing the graph clustering}
@@ -318,18 +318,18 @@ An example is provided in Figure \ref{fig:ca-clust-dif-boxplot} where the stabil
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{images/ch3/3_clust_dif_boxplot.png}}
-    \caption{\label{fig:ca-clust-dif-boxplot}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-clust-dif-boxplot}\textbf{Clustering method stability plot, obtained after 30 runs.} Each colour is associated with a different clustering technique. The boxplot illustrate the distribution of the ECC score. Above each boxplot the number of clusters that appears the most frequently is displayed. Leiden and Louvain are less stable than Louvain refined and SLM on some resolution values.}
 \end{figure}
 
 \subsubsection{Areas of clustering consistency}
 To reinforce the previous plot, \verb|ClustAssess| also offers support for visualising the distribution of the ECC score on an UMAP representation. The plot is faceted, so each column will be associated with one clustering method and each row with a resolution value. This plot can serve as a tool to identify the areas that are unstable, as well to assess whether the instability occurs at all algorithms in the same areas or not. We note that, in this case, the ECC will be calculated across all partitions that are obtained without filtering by a specific number of clusters.
 
-An example is provided in Figure \ref{fig:ca-clust-dif-facet}. It's noticeable how Leiden's behaviour is different from the other three: the main area of instability is located in the upper island. Louvain also has more incosistent areas when resolution is greater than 0.6. SLM and Louvain refined seem to behave similarly with few exceptions: for resolution 0.5 or 0.7, where the latter has an additional unstable region. The conclusion the user could draw is that SLM has the most robust behaviour, as there are a few number of unstable areas; in addition to that, those areas are unstable in the other algorithms as well.
+An example is provided in Figure \ref{fig:ca-clust-dif-facet}. It's noticeable how Leiden's behaviour is different from the other three: the main area of instability is located in the upper island. Louvain also has more inconsistent areas when resolution is greater than 0.6. SLM and Louvain refined seem to behave similarly with few exceptions: for resolution 0.5 or 0.7, where the latter has an additional unstable region. The conclusion the user could draw is that SLM has the most robust behaviour, as there are a few number of unstable areas; in addition to that, those areas are unstable in the other algorithms as well.
 
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{images/ch3/3_clust_dif_facet.png}}
-    \caption{\label{fig:ca-clust-dif-facet}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{images/ch3/3_clust_dif_facet.png}}
+    \caption{\label{fig:ca-clust-dif-facet}\textbf{Areas of clustering consistency plot, obtained after 30 runs}. A facet plot where each row is associated with a resolution value and a column with a clustering method. Each panel presents the ECC score distribution on a low-dimensional space. Leiden and Louvain have the most different behaviours when it comes to obtaining unstable regions. SLM has the most robust results. The areas where it is incosistent are in agreement with the results of the other community detection methods.}
 \end{figure}
 
 \subsubsection{Resolution - number of cluster correspondence}
@@ -350,13 +350,10 @@ An example is provided in Figure \ref{fig:ca-1-kres}. We notice how increasing t
     \makebox[\textwidth][c]{
         \includegraphics[width=0.5\linewidth]{images/ch3/3_1_kres_freq.png}
         \includegraphics[width=0.5\linewidth]{images/ch3/3_1_kres_ECC.png}}
-    \caption{\label{fig:ca-1-kres}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-1-kres}\textbf{Resolution - number of clusters correspondence plot.} The X-axis represents different resolution values and the Y-axis the number of obtained clusters. The colour indicates the frequency of the partitions with a given number of clusters for a fixed resolution value. For each resolution, the values indicated by the colour should sum up to 1. Each point shape is associated with a different configuration of parameters. The point size can illustrate either the frequency of the most common partition (left panel), or the ECC of the list of partitions with $c$ clusters obtained on resolution $\gamma$ (right panel). The point size indicates the robustness of the configuration at the change of random seed (bigger point sizes should be translate to high consistency). The colour gradient helps the user decide whether the stability conclusions are drawn from a statistically relevant sample (brighter shades are associated with relevant samples). The plot can be used to infer the appropriate resolution value for a desired number of clusters. }
 \end{figure}
 
-
 We note some cases of high stability indicated by both ECC and partition frequency, but not backed up by a relevant sample (see the points when resolution is 0.6 and the number of clusters 13). The plots also contains situations where the sample is high enough to trust the conclusion that a specific number of cluster is unstable (see the two configuration that lead to partitions with 17 clusters at resolution 1). The number of 18 clusters seems to be a robust choice for the configurations based on the SNN graph type.
-
-
 
 \subsubsection{Stability of the number of clusters}
 As can be observed from Figure \ref{fig:ca-1-kres}, multiple values of the resolution parameter can lead to partitions with the same number of clusters. Therefore, the task evolves from identifying stable pairs of resolution - number of clusters values to finding the number of clusters that is stable for any resolution value.
@@ -369,14 +366,14 @@ There could be situations when a number of clusters is present in only one parti
 
 Similarly to the previous plot, the shape of points indicate different configurations where the varying parameters are the number of nearest neighbour, the graph type and the community detection algorithm.
 
-An example is presented in Figure \ref{fig:ca-1-knpart}. The complexity of the plot allows to make multiple observations, such as the instability of the 17 as the number of clusters for "30\_NN\_Louvain" and "30\_N\_Louvain.refined". Also, we can notice that it is not redundant to use analyze both cases when the colour gradient represents the frequency of the most common partition (left panel) or the ECC of the list of partitions (right panel). There are cases, as the one when the number of clusters is 15, when the frequency is not convincing, but the high consistency provides the additional information that the other partitions are not significantly different from the most frequent one. We can remark the importance of the point size for 13 number of clusters with "30\_NN\_Louvain.refined" configuration: the stability is ranked high by both indicators, but the size of the point indicates that the sample used to calculate the stability is too small to be trusted. Two suitable choices that can be immediatly spotted are 16 and 18, where there is high stability, a small number of different partitions and a reasonable sample size.
+An example is presented in Figure \ref{fig:ca-1-knpart}. The complexity of the plot allows to make multiple observations, such as the instability of the 17 as the number of clusters for "30\_NN\_Louvain" and "30\_N\_Louvain.refined". Also, we can notice that it is not redundant to use analyze both cases when the colour gradient represents the frequency of the most common partition (left panel) or the ECC of the list of partitions (right panel). There are cases, as the one when the number of clusters is 15, when the frequency is not convincing, but the high consistency provides the additional information that the other partitions are not significantly different from the most frequent one. We can remark the importance of the point size for 13 number of clusters with "30\_NN\_Louvain.refined" configuration: the stability is ranked high by both indicators, but the size of the point indicates that the sample used to calculate the stability is too small to be trusted. Two suitable choices that can be immediately spotted are 16 and 18, where there is high stability, a small number of different partitions and a reasonable sample size.
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{
         \includegraphics[width=0.5\linewidth]{images/ch3/3_1_knpart_freq.png}
         \includegraphics[width=0.5\linewidth]{images/ch3/3_1_knpart_ECC.png}}
-    \caption{\label{fig:ca-1-knpart}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:ca-1-knpart}\textbf{Stability of the number of clusters plot.} The X-axis represents the number of clusters and the Y-axis the number of different partitions with a specific number of clusters that were obtained. The point size indicates the frequency of the partitions with a given number of clusters. Each point shape is associated with a different configuration of parameters. The colour can illustrate either the frequency of the most common partition (left panel), or the ECC of the list of partitions (right panel). The colour, as well as the y value, indicate the robustness of the configuration at the change of random seed (brighter shades of colour and low y value are a sign of stability). The point size helps the user decide whether the stability conclusions are drawn from a statistically relevant sample (big point sizes indicate relevant samples).}
 \end{figure}
 
 %\begin{figure}[H]

@@ -18,7 +18,7 @@ Figure \ref{fig:comp-time} illustrates the time (measured in seconds) required t
     \makebox[\textwidth][c]{
         \includegraphics[width=0.7\linewidth]{images/ch4/4_clusim_ca_time.png}
     }
-    \caption{\label{fig:comp-time}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:comp-time}\textbf{Runtime comparison between ClustAssess and clusim.} The results are displayed on logarithmic scale.}
 \end{figure}
 
 
@@ -31,7 +31,7 @@ Figure \ref{fig:comp-time} illustrates the time (measured in seconds) required t
 \textbf{ClustAssess} & 0.001335    & 0.000918     & 0.003551     & 0.006514      & 0.027171       & 0.054795        & 0.325342        & 0.496565        & 0.57            \\ \hline
 \textbf{clusim}      & 0.000608    & 0.000995     & 0.006256     & 0.015005      & 0.291919       & 1.119508        & 29.86761        & 71.3589         & 110.3293        \\ \hline
 \end{tabular}}
-\caption{\label{tab:comp-time} Time in seconds}
+\caption{\label{tab:comp-time} Runtime of ClustAssess and clusim on datasets with various sizes, measured in seconds.}
 \end{table}
 
 \subsection{Memory consumption comparison}
@@ -45,7 +45,7 @@ We note that, at the time of writing, the machines used in daily tasks have betw
     \makebox[\textwidth][c]{
         \includegraphics[width=0.7\linewidth]{images/ch4/4_clusim_ca_memory.png}
     }
-    \caption{\label{fig:comp-mem}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:comp-mem}\textbf{Memory consumption comparison between ClustAssess and clusim.} The results are displayed on logarithmic scale.}
 \end{figure}
 
 
@@ -58,7 +58,7 @@ We note that, at the time of writing, the machines used in daily tasks have betw
 \textbf{ClustAssess} & 0.000021 & 0.000071 & 0.000719 & 0.000808 & 0.001855 & 0.018308 & 0.038693 & 0.037435 & 0.036799 \\ \hline
 \textbf{clusim}      & 0.060688 & 0.061069 & 0.06767 & 0.091365 & 0.610633 & 2.970745 & 74.46173 & 167.6854 & 241.5057 \\ \hline
 \end{tabular}}
-\caption{\label{tab:comp-mem} Memory in GiB}
+\caption{\label{tab:comp-mem} Memory consumption of ClustAssess and clusim on datasets with various sizes, measured in GiB.}
 \end{table}
 
 \subsection{The impact of the number of clusters}
@@ -74,7 +74,7 @@ Contrary to the expectations, \verb|clusim| seems to perform better when the num
         \includegraphics[width=0.5\linewidth]{images/ch4/4_clusim_ca_time_k.png}
         \includegraphics[width=0.5\linewidth]{images/ch4/4_clusim_ca_memory_k.png}
     }
-    \caption{\label{fig:comp-k}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:comp-k}\textbf{Runtime (left) and memory consumption (right) comparison between ClustAssess and clusim when different number of clusters are used}.}
 \end{figure}
 
 \subsection{Results accuracy}
@@ -131,7 +131,7 @@ runtime increases with more cells; moreover the parallelisation substantially sp
 \end{figure}
 
 \subsection{Interpreting the results}
-The conclusion is that the stability pipeline has scaling capabilites and can be run in a reasonable amount of time for medium-sized datasets. The performance differ from dataset to dataset and could be affected by factors such as:
+The conclusion is that the stability pipeline has scaling capabilities and can be run in a reasonable amount of time for medium-sized datasets. The performance differ from dataset to dataset and could be affected by factors such as:
 \begin{itemize}
     \item the clustering algorithm that is used: Louvain and Louvain refined are generally faster than Leiden and SLM (at least in the Seurat's implementation);
     \item the size of the dataset: to obtain the stability plots in a reasonable amount of time, we advise performing a subsampling before running the pipeline;

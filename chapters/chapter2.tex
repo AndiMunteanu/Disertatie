@@ -6,7 +6,7 @@ As stated in the previous chapter, the PhenoGraph pipeline was widely adopted in
 The most frequently used R packages that perform single-cell data processing are Seurat (currently on the third version) \cite{Hao2021} and Monocle (currently at the third version) \cite{Cao2019}. Both packages use the PhenoGraph method for the cell clustering. The goal of this chapter is to evaluate the output of the two packages and compare the results side by side.
 
 \section{Data used for experiments}
-To perform this comparison, we used the Cuomo data \cite{Cuomo2020}, an in-vitro SMART-seq dataset of human endoderm differentiation. The dataset contains 1880 cells extracted from six donors (hayt, naah, vils, pahc, melw and qunz) at four different timepoints. The cells are in expressed in approximately 30 000 genes. The dataset was preprocessed by removing the cells that are expressed in less than 200 features and the genes that are expressed in less than three cells. MT (mitochondrial) and RP (ribosomal protein) genes were also excluded from the feature set.
+To perform this comparison, we used the Cuomo data \cite{Cuomo2020}, an in-vitro SMART-seq dataset of human endoderm differentiation. The dataset contains 1880 cells extracted from six donors (hayt, naah, vils, pahc, melw and qunz) at four different time-points. The cells are in expressed in approximately 30 000 genes. The dataset was preprocessed by removing the cells that are expressed in less than 200 features and the genes that are expressed in less than three cells. MT (mitochondrial) and RP (ribosomal protein) genes were also excluded from the feature set.
 
 The purpose of this thesis is to analyze the clustering pipeline, therefore the preprocessing parameters (normalization and scaling) are done in the same manner for both packages.
 
@@ -33,7 +33,7 @@ For the dimensionality reduction, both packages allow the usage of either linear
     \centering
     \includegraphics[width=7cm]{ch2/2_S1.png}
     \includegraphics[width=7cm]{ch2/2_M1.png}
-    \caption{\label{fig:s4-m3-default}Clustering distribution with default parameters for Monocle (right) and Seurat (left). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-default}\textbf{Results obtained on default results} Clustering distribution with default parameters for Monocle (right) and Seurat (left). The title indicates the default random seed that is used.}
 \end{figure}
 
 If the Cuomo \cite{Cuomo2020} dataset is clustered using the Monocle and Seurat packages with default parameters, significantly different outputs are produced, as it can be observed in Figure \ref{fig:s4-m3-default}. Firstly, there are differences with respect to the dimensionality reduction. The cells are scattered in multiple islands in the Monocle package, whereas Seurat obtains a more compact grouping. Also, the two packages disagree regarding the number of clusters: Seurat outputs 13 clusters, Monocle 15.
@@ -50,14 +50,14 @@ All algorithms involved in the clustering pipeline contain at least one stochast
     \centering
     \includegraphics[width=7cm]{ch2/2_S1.png}
     \includegraphics[width=7cm]{ch2/2_S2.png}
-    \caption{\label{fig:s4-m3-seed}Clustering distribution with default parameters for Monocle (right) and Seurat (left). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-seed}\textbf{The importance of the random seed}. Left panel indicates the results when Seurat sets the seed to 42, and the right panel when the seed is 2016. Seurat labels the clusters based on their size, so looking at the island from the right side of the plot, we can notice that the partitions, as well as the topology of the data, are different. }
 \end{figure}.
 
 \subsection{Dimensionality reduction}
-As stated in the previous sections, both Seurat and Monocle suggest applying PCA on the raw dataset and UMAP or tSNE afterwards. The default choice for non-linear dimensionality reduction is UMAP. As for the implementation, both packages are using the same R packages: \verb|irlba| for PCA (citation) and \verb|uwot| for UMAP (citaton).
+As stated in the previous sections, both Seurat and Monocle suggest applying PCA on the raw dataset and UMAP or tSNE afterwards. The default choice for non-linear dimensionality reduction is UMAP. As for the implementation, both packages are using the same R packages: \verb|irlba| for PCA \cite{Baglama2016IRLBAFP} and \verb|uwot| for UMAP.
 
 \subsubsection{PCA}
-The output of the PCA can be affected by parameters such as the number of principal components or the precision of the calculation (the \verb|irlba| package performs an approximate PCA calculation), but the difference between the packages lies in the feature space. Although the data contains up to 30 000 genes, most of them are not appropiate for describing the cells behaviour, as they would introduce more noise than perform any significant separation. Thus, the standard in the processing of the biological data is to choose a relatively small subset of genes that contain discriminative information. By default, Monocle uses all genes, but Seurat performs the PCA only on the genes that have the most variability (citation) (also reffered in literature as highly variable - or HV - genes). Figure \ref{fig:s4-m3-pca} illustrates how the feature set affects the topology. If Seurat uses all genes for PCA, the resulting embedding will contain numerous small islands (see panels S3 and S4). Using only HV genes in Monocle leads to more compact group of cells (see panels M3 and M4).
+The output of the PCA can be affected by parameters such as the number of principal components or the precision of the calculation (the \verb|irlba| package performs an approximate PCA calculation), but the difference between the packages lies in the feature space. Although the data contains up to 30 000 genes, most of them are not appropiate for describing the cells behaviour, as they would introduce more noise than perform any significant separation. Thus, the standard in the processing of the biological data is to choose a relatively small subset of genes that contain discriminative information. By default, Monocle uses all genes, but Seurat performs the PCA only on the genes that have the most variability \cite{Townes2019} (also reffered in literature as highly variable - or HV - genes). Figure \ref{fig:s4-m3-pca} illustrates how the feature set affects the topology. If Seurat uses all genes for PCA, the resulting embedding will contain numerous small islands (see panels S3 and S4). Using only HV genes in Monocle leads to more compact group of cells (see panels M3 and M4).
 
 \subsubsection{UMAP}
 The UMAP algorithm is signifcantly affected by three parameters:
@@ -73,20 +73,17 @@ Monocle and Seurat agree on the cosine measurement as the distance metric, but t
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_pca_genes.png}}
-    \caption{\label{fig:s4-m3-pca}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-pca}\textbf{The importance of the initial feature set} S3 - Seurat results when using HV genes (default); S4 - Seurat results when using all genes; M3 - Monocle results when using all genes (default); M4 - Monocle results when using HV genes. For both packages, using a different feature set affects the final embedding: all genes create small separated islands, while HV genes produces more compact groups.}
 \end{figure}
-
-
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_umap_min_dist.png}}
-    \caption{\label{fig:s4-m3-min-dist}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-min-dist}\textbf{The importance of the minimum distance parameter} S5 - Seurat results when using 0.3 (default); S6 - Seurat results when using 0.1; M5 - Monocle results when using 0.1 (default); M6 - Monocle results when using 0.3. The topology is affected when the minimum distance is changed for both packages.}
 \end{figure}
-
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_umap_n_neigh.png}}
-    \caption{\label{fig:s4-m3-n-neigh-umap}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-n-neigh-umap}\textbf{The importance of the UMAP number of neighbours} S7 - Seurat results when using 30 (default); S8 - Seurat results when using 15; M7 - Monocle results when using 15 (default); M8 - Monocle results when using 30. The topology is affected when the number of neighbours is changed (see the island from the right side of the plot).}
 \end{figure}
 \end{landscape}
 
@@ -102,7 +99,7 @@ The major discrepancy between them relates to the usage of the self-neighbours. 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=5cm]{ch2/2_snn_issue_1.png}}
-    \caption{\label{fig:s4-m3-snn-1}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-snn-1}\textbf{Example illustrating the difference between SNN implementations in Seurat vs Monocle.}}
 \end{figure}
 The importance of self-neighbours is illustrated on Figure \ref{fig:s4-m3-snn-1}. Setting $k = 5$, we calculate the neighbourhoods for the fourth and the fifth points. If we include the self-neighbour, we get:
 
@@ -128,7 +125,8 @@ The intersection between these neighbourhoods contains only three points, and th
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=5cm]{ch2/2_snn_issue_2.png}}
-    \caption{\label{fig:s4-m3-snn-2}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-snn-2}\textbf{Example illustrating two direct neighbours (1 and 6) with disjoint
+neighbourhoods.}}
 \end{figure}
 Another discrepancy is presented in the example provided in the Figure \ref{fig:s4-m3-snn-2}. Using the same value for $k$, we calculate the neighbourhoods for the first and the sixth point. If we include the self-neighbour, we get:
 
@@ -161,16 +159,17 @@ Following the conclusion of the previous two differences, we can state that Mono
     However, from the second difference, we know that in Monocle indirect neighbours are not taken into consideration. Therefore, even if we would obtain an edge with a weight of one between the two points, it will be discarded, given the restriction.
 \end{proof}
 
-The developers of the Monocle package decided to solve this limitation by performing a scaling of the weights to the interval $[0, 1]$. The issue of this approach is that it can affect the clustering output and the downstream partitioning result, as some quality function are scale variant (citation).
+The developers of the Monocle package decided to solve this limitation by performing a scaling of the weights to the interval $[0, 1]$. The issue of this approach is that it can affect the clustering output and the downstream partitioning result, as some quality function are scale variant \cite{Laarhoven2014}).
 
 \subsubsection{Case study}
-To prove the importance of these differences between the two implementations, we used the Cuomo \cite{Cuomo2020} dataset. The number of nearest neighbours is set to $k = 150$. Figure \ref{fig:s4-m3-snn-3} illustrates the difference between Monocle and Seurat results, shown for the neighbours of a point chosen from the datset.
+To prove the importance of these differences between the two implementations, we used the Cuomo \cite{Cuomo2020} dataset. The number of nearest neighbours is set to $k = 150$. Figure \ref{fig:s4-m3-snn-3} illustrates the difference between Monocle and Seurat results, shown for the neighbours of a point chosen from the dataset.
 
 The first two panels present the weight distribution of the edges incident to the chosen point when using Seurat (A) and Monocle (B). The third panel contains the absolute difference of the weights of the edges incident to direct neighbours. As it can be observed, the maximum difference is not greater than 0.012, which suggests that the two implementations behave similarly for direct neighbours when $k$ is reasonably high. Panel D shows the distribution of the weights incident to the indirect neighbours. The colour scale indicates that there is a reasonable amount of points where the weight has a value that may have an impact in the overall structure of the final graph.
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{ch2/2_snn_issue_3.png}}
-    \caption{\label{fig:s4-m3-snn-3}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-snn-3}\textbf{Weights distribution for Cuomo dataset (UMAP representation)}. Distribution of weights calculated in Seurat (A) and Monocle (B). Contrast of results illustrated using the difference of edge-weights for direct (C) and indirect (D) neighbours. Panel C suggests that, for farily large number of neighbours, the two implementations lead to similar results. However, panel D showcases the importance of including the edges between indirect neighbours.
+}
 \end{figure}
 
 \subsubsection{Aligning the SNN implementations}
@@ -182,20 +181,20 @@ However, continuing the alignment process between the two packages, the graph ty
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_graph_base.png}}
-    \caption{\label{fig:s4-m3-graph-base}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-graph-base}\textbf{The importance of the graph base embedding} S9 - Seurat results when using PCA (default); S10 - Seurat results when using UMAP; M9 - Monocle results when using UMAP (default); M10 - Monocle results when using PCA. For both Seurat and Monocle, using a different base embedding for the construction of the graph leads to different number of clusters.}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_graph_type.png}}
-    \caption{\label{fig:s4-m3-n-graph-type}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-n-graph-type}\textbf{The importance of the graph type} S11 - Seurat results when using SNN (default); S12 - Seurat results when using NN; M11 - Monocle results when using NN (default); M12 - Monocle results when using SNN. For Monocle, both graph types lead to the same clusterings. For Seurat, SNN and NN output different partitions (for example, the region between clusters 2 and 8 from SNN and 5 and 1 from NN).}
 \end{figure}
 \end{landscape}
 
 \subsection{Graph clustering}
-Once the two packages reach an agreement on the low-dimensional reduced space and on the built graph, the clustering step must be aligned in order to obtain the same partitions. Firstly, both Seurat and Monocle should use the same clustering alogrithms. By default, Monocle clusters data using the Leiden algorithm and Seurat uses the Louvain algorithm. In Figure \ref{fig:s4-m3-graph-alg} we can observe how the two community detection methods produce a different output on the same graph.
+Once the two packages reach an agreement on the low-dimensional reduced space and on the built graph, the clustering step must be aligned in order to obtain the same partitions. Firstly, both Seurat and Monocle should use the same clustering algorithms. By default, Monocle clusters data using the Leiden algorithm and Seurat uses the Louvain algorithm. In Figure \ref{fig:s4-m3-graph-alg} we can observe how the two community detection methods produce a different output on the same graph.
 
-Given the optimization nature of the clustering algorithm, the objective function is another important parameter that can influence the composition of the clusters, as it can be seen in \ref{fig:s4-m3-quality}. It is noticeable how the CPM quality function, used by default by Monocle, leads to getting more clusters compared to the RBConfiguration function which is used by Seurat.
+Given the optimization nature of the clustering algorithm, the objective function is another important parameter that can influence the composition of the clusters, as it can be seen in \ref{fig:s4-m3-quality}. It is noticeable how the CPM quality function, used by default by Monocle, leads to getting more clusters compared to the RBConfiguration (or simply RB) function which is used by Seurat.
 
 The parameter that directly influences the number of clusters is the resolution parameter. Monocle sets the resolution to $1e-4$ and Seurat to $0.8$. Figure \ref{fig:s4-m3-res} proves the intuition that using different resolution values outputs different number of clusters.
 
@@ -204,31 +203,28 @@ Finally, the community detection algorithms are iterative, thus using a differen
     \centering
     \includegraphics[width=0.3\linewidth]{ch2/2_cont_table.png}
     \includegraphics[width=0.3\linewidth]{ch2/2_final_clustering.png}
-    \caption{\label{fig:s4-m3-cont}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-cont}\textbf{The importance of the number of iterations}. The left panel indicates the contingency table between the partitions obtained by Monocle and Seurat. The only difference between them is the number of clustering iterations - 10 for Seurat, 2 for Monocle. The contingency table is not perfect diagonal, thus the number of iterations affect the result. The right panel illustrates the final partition obtained by both packages.}
 \end{figure}
 
 \begin{landscape}
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_graph_alg.png}}
-    \caption{\label{fig:s4-m3-graph-alg}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-graph-alg}\textbf{The importance of the clustering technique} S13 - Seurat results when using Louvain (default); S14 - Seurat results when using Leiden; M13 - Monocle results when using Leiden (default); M14 - Monocle results when using Louvain. The Louvain algorithm outputs partitions with more clusters for both packages. }
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_quality_function.png}}
-    \caption{\label{fig:s4-m3-quality}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-quality}\textbf{The importance of the quality function} S15 - Seurat results when using RB (default); S16 - Seurat results when using CPM; M15 - Monocle results when using CPM (default); M14 - Monocle results when using RB. CPM outputs signifcantly more clusters than RB in the Seurat package. The quality functions also do not agree on the Monocle package, too: CPM outputs three, RB one. }
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=\linewidth]{ch2/2_resolution.png}}
-    \caption{\label{fig:s4-m3-res}Clustering distribution with default parameters for Monocle (left) and Seurat (right). The title indicates the default random seed that is used.}
+    \caption{\label{fig:s4-m3-res}\textbf{The importance of the resolution} S17 - Seurat results when using 0.8 resolution (default); S16 - Seurat results when using 1e-4 resolution; M15 - Monocle results when using 1e-4 resolution (default); M14 - Monocle results when using 0.8 resolution. Higher resolution values lead to obtaining more clusters.}
 \end{figure}
 \end{landscape}
-
-
-
 
 \section{Summary}
 After performing all the aligning steps (summarized in Table \ref{tab:param}), both packages obtain the same partition (shown in the right display of Figure \ref{fig:s4-m3-cont}).
