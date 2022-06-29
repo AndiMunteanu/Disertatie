@@ -21,10 +21,10 @@ The following subsections overview four frequently used community detection algo
 
 \subsection{Louvain graph clustering algorithm}
 The Louvain algorithm \cite{Blondel2008b} is a state-of-the art community detection algorithm; it is based on an iterative greedy approach. The method can be used to optimize an \textit{a priori} user-defined partition; the default behaviour is to initially assign each node to its own cluster.
-Each iteration comprises two repeating steps. The first step (local moving heuristic) is to change the partition structure in a greedy manner. For each node the algorithm evaluates whether a label-change would improve the overall quality of the partition. If affirmative, the node is reassigned to the cluster that provides the greatest increase of quality. These assessments/ steps are repeated until convergence. The second step is shrinking the graph, meaning each community with a super-node. Thus, the number of super-nodes in the resulting graph will be the same as the number of clusters identified in the first step. The weights of the edges are also recalculated using the sum of inter-cluster weights of the original graph.
+Each iteration comprises two repeating steps. The first step (local moving heuristic) is to change the partition structure in a greedy manner. For each node the algorithm evaluates whether a label-change would improve the overall quality of the partition. If affirmative, the node is reassigned to the cluster that provides the greatest increase of quality. These assessments/ steps are repeated until convergence. The second step is shrinking the graph, replacing each community with a super-node. Thus, the number of super-nodes in the resulting graph will be the same as the number of clusters identified in the first step. The weights of the edges are also recalculated using the sum of inter-cluster weights of the original graph.
 These two steps are repeated until the partition doesn't change after the first phase.
 
-The algorithm relies on multiple runs, with every current iterations taking as starting point the partition that is obtained on the previous step. The algorithm converges if no change is observed between two consecutive iterations.
+The algorithm relies on multiple runs, with every current iteration taking as starting point the partition that is obtained on the previous step. The algorithm converges if no change is observed between two consecutive iterations.
 
 Although it is a greedy algorithm, Louvain does infer qualitative clusters. Another advantage of the method is computational efficiency: the average time complexity is $O(n \log n)$, where $n$ is the number of nodes.
 
@@ -32,76 +32,76 @@ Although it is a greedy algorithm, Louvain does infer qualitative clusters. Anot
 % More details about the fact that only the labels of the neighbours are considered in the first place?
 
 \subsection{Louvain with multilevel refinement algorithm}
-Rotta and Noack \cite{Rotta2011} proposed an extension of the Louvain algorithm. The problem the authors were trying to overcome was escaping the local optima that the first step was reaching. 
+In 2011, Rotta and Noack \cite{Rotta2011} proposed an extension of the Louvain algorithm. The author's focus was escaping the local optima characteristic to the first step of the clustering algorithm. 
 
-The solution they provided is to exploit a consequence of the second step of the algorithm: after the graph is shrunk and re-clustered, the clusters' composition can suffer some changes. The idea of the Louvain with multi-level refinement is to add another step after the graph is expanded back to its original structure, which is re-applying the local moving heuristic. That ensures that, at the end of each iteration, a local optima is always reached.
+The solution they provided was based on a consequence of the second step of the algorithm: after the graph is shrunk and re-clustered, the composition of the clusters can be changed. The idea of the Louvain with multi-level refinement is to include an additional step after the graph is expanded back to its original structure, i.e. re-applying the local moving heuristic. This addition ensures that, at the end of each iteration, a local optima is always reached.
 
 \subsection{Smart Local moving (SLM) algorithm}
-The Louvain algorithm (and its refined version) ensure local optimal node movements, but it doesn't optimize the movement of a set of nodes or the splitting of a community. Waltman and van Eck \cite{Waltman2013} proposed the Smart Local Moving algorithm (SLM). In this method, for each community that is obtained in the first step of the Louvain algorithm, the associated subgraph is generated and clustered using the local moving heuristic. If the subgraph will contain more than one cluster, the initial community will be replaced with its subgroups. This procedure enables the algorithm to move subsets of points in a local optimal way. 
+The Louvain algorithm (and its refined version) ensures local optimal node movements; however, it doesn't optimize the movement of a set of nodes or the splitting of a community. In 2013, Waltman and van Eck \cite{Waltman2013} proposed the Smart Local Moving algorithm (SLM). In this method, for each community obtained in the first step of the Louvain algorithm, the associated subgraph is generated and clustered using the local moving heuristic. If the subgraph contains more than one cluster, the initial community is replaced with its subgroups. This procedure enables the algorithm the movement of subsets of points in a locally optimal way. 
 
-One of the main differences between Louvain and SLM relates to the convergence of the results. Louvain (and its refined variant) quickly converge after a few iterations, as no community merging or node moving leads to better results. However, SLM, by splitting the communities into subclusters and moving a group of nodes, can improve its results after multiple runs. The downside is that the lack of convergence will lead to more execution time.
+One of the main differences between Louvain and SLM is the convergence of the results. Louvain (and its refined variant) quickly converge after few iterations, as no community merging or node moving leads to better results. However, SLM, by splitting the communities into subclusters and moving a group of nodes, can improve results after multiple runs. The main limitation is the increase in runtime due to non-convergence.
 
-\subsection{Leiden}
-In the Leiden paper \cite{Traag2019a}, Traag, van Eck and Waltman present a limitation of the Louvain algorithm, which relates to the degradation of the communities structure. During the local movement phase, a situation can occur when the designated node acts like a bridge inside its community. Thus, performing the movement to other cluster will results in disconnecting the original group. The Louvain algorithm doesn't have any mechanism to prevent this behaviour. The Leiden paper furtherly states that the structure becomes worse for each iteration.
+\subsection{Leiden clustering algorithm}
+In the paper describing the Leiden algorithm \cite{Traag2019a}, Traag, van Eck and Waltman present a limitation of the Louvain algorithm, related to the degradation of the communities structure. During the local movement phase, a particular situation can limit the progress of the algorithm i.e a designated node acts as a bridge within its community. Thus, performing the movement to other cluster will results in disconnecting the original group. The Louvain algorithm doesn't have any mechanism to prevent this behaviour. The Leiden paper further illustrates how the structure becomes worse with each iteration.
 
-The authors proposed a new algorithm named Leiden, which introduces an additional refinement step after the local moving phase. The approach is similar to SLM, namely it splits each cluster in sub-communities. The difference is that Leiden uses a modified version of the local moving heuristic in order to obtain well-defined sub-groups and to prevent the creation of disconnected communities. Inside each community, the points are initially assigned to singleton clusters. Afterwards, the algorithm takes each node and identifies the well-connected communities where it could be moved. A group is considered to be well-connected if it can be split into two sub-groups such as the number of edge between them exceeds a threshold related to the resolution parameter. Once the well-connected groups are identified, the algorithm doesn't pick the one with the highest quality gain. Rather it assigns a probability for each community proportionate with the increase. This approach allows a better exploration of the search space. Once the sub-communities are formed, the algorithm performs in a similar way with SLM.
+The Leiden algorithm introduces an additional refinement step after the local moving phase. The approach is similar to SLM, namely it splits each cluster in sub-communities. The difference comprises a modified version of the local moving heuristic used for obtaining well-defined sub-groups and preventing the creation of disconnected communities. Within each community, the points are initially assigned to singleton clusters. Next, the algorithm iterates through the node set and identifies the well-connected communities where the Local Moving heuristic could be applied. A group is considered to be well-connected if it can be split into two sub-groups such that the number of edges between them exceeds a threshold tuned by the resolution parameter. Once the well-connected groups are identified, the algorithm doesn't pick the one with the highest quality gain. Rather it assigns a probability for each community proportionally with the increase. This approach allows a better exploration of the search space. Once the sub-communities are formed, the algorithm performs in a similar way with SLM.
 
-Another improvement brought in the Leiden algorithm relates to the movement heuristic. The Louvain algorithm looks for quality improvements for all nodes. Leiden uses a queue where it stores the nodes that should be evaluated. If a node brings a quality improvement by moving it to another community, its neighbours that are in other groups are appended to the queue. Using this approach allows only the nodes that are affected by the movement to be evaluated.
+Another improvement specific to the Leiden algorithm relates to the movement heuristic. The Louvain algorithm looks for quality improvements across all nodes. Leiden uses a queue storing the nodes that will be evaluated. If a node improves the quality of the partitioning by its reassignment to another community, its neighbours found other groups are appended to the queue. This approach focuses the evaluation on only the nodes that are affected by the change.
 
-Although there is no formal proof, Leiden's performance was empirically observed to be linear to the number of nodes. However, the authors of the algorithms bring guarantees about the characteristics of the obtained partitions, such as $\gamma$-separation, $\gamma$-connectivity, node optimality and subpartition $\gamma$-density.
+Although no formal proof was provided, Leiden's performance was empirically observed to be linear wrt the number of nodes. Moreover, the authors comment on the characteristics of the obtained partitions, such as $\gamma$-separation, $\gamma$-connectivity, node optimality and subpartition $\gamma$-density.
 
 \section{PhenoGraph pipeline}
-    PhenoGraph \cite{Levine2015} is a pipeline proposed by Levine et al. to process biological data and obtain a clustering that is interpreted as different cell types. The pipeline is consists of the following steps:
-    \begin{enumerate}
+PhenoGraph \cite{Levine2015} is a pipeline proposed by Levine et al. in 2015 to process biological data with the purpose of obtaining a clustering that can be linked to different cell types. The pipeline is consists of the following steps:
+\begin{enumerate}
         \item dimensionality reduction
         \item graph construction
         \item graph clustering
-    \end{enumerate}
+\end{enumerate}
 
-    Each step will be described in detail in the following sections.
+Each step will be described in detail in the following sections.
 
-    \subsection{Dimensionality reduction}
-    Given that the human genome contains approximately 25-30000 genes, it is expected that the input data (that is, cells extracted from a tissue from multiple donors) will be highly dimensional. Clustering techniques are highly reliant on calculating distances between points, thus an increased number of dimension will lead to expensive computations. The solution for this is to reduce the input space such that no information is lost.
+\subsection{Dimensionality reduction}
+Given that the \textit{H Sapiens} genome contains $\sim 25k$ genes, it is expected that the input data (i.e. expression matrices summarising gene expression levels across hundreds or thousands of cells extracted from a specific tissue, across multiple donors) will be highly dimensional. Clustering techniques are highly reliant on calculating distances between points, thus an increased number of dimensions leads to expensive computations. The solution is to reduce the input space while preventing information loss.
     
-    One of the most used approach is Principal Component Analysis (PCA) \cite{WOLD198737}, which is a method that uses linear combinations (called principal components) of the initial features to reduce the number of dimensions. This algorithm relies on computing the singular values decomposition, which is a heavy computational task, but several methods of truncating the calculation were developed in order to increase the algorithm's efficiency \cite{Baglama2016IRLBAFP}. To prevent the loss of the original information, the common practice is to use somewhere between 30 and 50 principal components.
+A frequently used approach for dimensionality reduction is Principal Component Analysis (PCA) \cite{WOLD198737}; it relies on linear combinations (i.e. principal components) calculated on the initial expression matrix, to reduce the number of dimensions. The algorithm relies on computing the singular values decomposition, which is computationally intensive. To alleviate this burden on resources, several methods of truncating the calculation were developed for increasing the efficiency of the algorithm \cite{Baglama2016IRLBAFP}. To prevent the loss of the original information, common practice is to focus between first 30 to 50 principal components.
 
-    Dimensionality reduction can also be performed in a non-linear fashion. Here we mention UMAP \cite{mcinnes2018uniform}, an graph-based method that tries to optimize a cross-entropy function in order to create a reduced space that preserves the topology of the original data: the similar points are kept in close proximity, while maintaining the separation between distinct well-defined groups. Compared to the linear methods, UMAP manages to preserve the structure of the original data in only two or three dimensions. This characteristic makes UMAP a more suitable choice when it comes to visualising the data. The downside of the non-linear method that, given its stochastic nature, it can be affected by the value of the random seeds. Usually the effect is presented as slight changes of the topology of the groups or rotations of the representation.
+Dimensionality reduction can also be performed in a non-linear fashion. Here we mention UMAP \cite{mcinnes2018uniform}, an graph-based method that tries to optimize a cross-entropy function to create a reduced space that preserves the topology of the original data: the similar points are kept in close proximity, while maintaining the separation between distinct well-defined groups. Compared to the linear methods, UMAP preserves the structure of the original data in only two or three dimensions. This characteristic makes UMAP a more suitable choice when it comes to visualising the data. A limitation of the non-linear method is that, given its stochastic nature, it can be affected by the random seeds. Usually the effect is presented as slight changes of the topology of the groups or rotations of the representation.
 
-    \subsection{Graph construction}
-    As mentioned before, the relationship between nodes is better described in a graph structure, where the existence of the edges between nodes indicates a specific degree of similarity. The conversion is performed using the kNN algorithm. This explains the need of performing dimensionality reduction prior to the graph construction, as the distance calculation becomes computationally expensive on large number of features.
+\subsection{Graph construction}
+The relationship between nodes is better described in a graph structure, where an edge between nodes quantifies similarity. The conversion is performed using the kNN algorithm. This also emphasises the advantages of performing dimensionality reduction prior to the graph construction, as the distance calculation becomes computationally expensive on large number of features.
     
-    The first step is to calculate the \textit{k} nearest neighbours for each node using a distance metric (usually Euclidean or cosine). The graph will be created by drawing edges between a node and its \textit{k} neighbours. The neighbourhood relationship is not symmetrical, thus the graph will be directed. 
+The first step is to calculate the \textit{k} nearest neighbours for each node using a distance metric (usually Euclidean or cosine). The graph is then created by drawing edges between a node and its \textit{k} neighbours. The neighbourhood relationship is not symmetrical, thus the resulting graph is directed. 
     
-    Given the curse of dimensionality \cite{Altman2018}, distance cannot be trusted to be used for the weight of the edges. Thus, the authors of the PhenoGraph proposed to calculate the weights using the Jaccard Similarity Index (JSI) of the neighbourhoods. The weights can take values between 0 and 1 using the formula 
+Given the curse of dimensionality \cite{Altman2018}, distances are difficult to interpret as weights of edges. Thus, the authors of the PhenoGraph proposed an alternative calculation of the weights using the Jaccard Similarity Index (JSI) applied on the neighbourhoods. The weights can take values between 0 and 1 using the formula 
     
-    \[ W_{ij} = \frac{|N_k(i) \cap N_k(j)|}{|N_k(i) \cup N_k(j)|}, \] where $N_k(i)$ indicates the k-neighbourhood of the node $i$. Thus, weights closer to zero indicate that the two points have significantly different neighbourhoods, whereas values closer to one mark a good overlap between the sets of neighbours.
+\[ W_{ij} = \frac{|N_k(i) \cap N_k(j)|}{|N_k(i) \cup N_k(j)|}, \] where $N_k(i)$ indicates the k-neighbourhood of node $i$. Thus, weights closer to 0 indicate that the two points have significantly different neighbourhoods, whereas values closer to 1 mark a good overlap between the sets of neighbours.
 
-    The weighted graph is also referred in literature as Shared Nearest Neighbour graph (SNN).
+The weighted graph is also referred in literature as Shared Nearest Neighbour graph (SNN).
     
    % It should be mentioned that the node its included in his own neighbourhood. Otherwise, this would lead to misclassification of weights, especially in the case where the two nodes are direct neighbours, but the rest of their neighbourhoods are disjoint. If $v(i)$ doesn't include $i$, the intersection will not contain any element, thus the edge will get a weight of zero, altough the points are direct neighbours. 
 
    % [[Add the two photos with the examples from the supplementary]]
 
-    \subsection{Graph clustering}
-    The last step consists in identifying the clusters using a community detection algorithm. As presented in the previous section, this method is computationally efficient and manages to group points into dense subgraphs by optimizing a quality function, without being dependant on the cluster size or shape.
+\subsection{Graph clustering}
+The last step consists in identifying the clusters using a community detection algorithm. As presented in the previous section, this method is computationally efficient and leads to grouping points into dense subgraphs by optimizing a quality function, without being dependant on the cluster size or shape.
 
-    The original PhenoGraph article proposed using the Louvain article, but in our experiments we will use its improvements as well, namely Louvain with multilevel refinement, SLM and Leiden. 
+The original PhenoGraph paper proposes the Louvain approach as default; in our analyses we also tests its alternatives, namely Louvain with multilevel refinement, SLM and Leiden. 
 
-    The authors' approach on getting results that are not affected by the seed was to run the community detection 100 times and choose the most qualitative partition.
+The authors' approach on obtaining robust results, ie not affected by the random seed, was to run the community detection 100 times and choose the partition with the highest quality value.
 
 \section{Element-Centric Similarity}
-    \subsection{Introductory terms}
-    \textit{Cluster affiliation graph}: a bipartite graph that represents the relationship between points and clusters. One vertex set will contain the points, while for the other one node is associated with a cluster. An edge indicates that a point belongs to a cluster (or, vice versa, that a cluster contains that point).
+\subsection{Introductory terms}
+\textit{Cluster affiliation graph}: a bipartite graph that represents the relationship between points and clusters. One vertex set contains the points, while for the other, one node is associated with a cluster. An edge indicates that a point belongs to a cluster (or, vice versa, that a cluster contains that point).
     
-    \textit{Cluster-induced element graph}: a directed graph where the node set is represented by the original points. Two nodes share an edge if they belong to the same cluster.
+\textit{Cluster-induced element graph}: a directed graph where the node set is represented by the original points. Two nodes share an edge if they belong to the same cluster.
 
-    \textit{Affinity matrix} The affinity matrix, or the personalized PageRank (PPR) affinity is determined by calculating the paths between elements of the cluster-induced element graph. The PPR of a node $i$ to the others is computed as follows:
+\textit{Affinity matrix} The affinity matrix, or the personalized PageRank (PPR) affinity is determined by calculating the paths between elements of the cluster-induced element graph. The PPR of a node $i$ to the others is computed as follows:
 
     \[ p_i = (1 - \alpha) v_i + \alpha p_i W \]
 
-    where $v_i$ is a one-hot encoded vector with 1 on the $i^{th}$ position, $W$ the weighted adjacency matrix of the cluster-induced element graph and $\alpha$ is a parameter that determines the importance of overlaps in overlapping or hierarchical communities.
+where $v_i$ is a one-hot encoded vector with 1 on the $i^{th}$ position, $W$ the weighted adjacency matrix of the cluster-induced element graph and $\alpha$ is a parameter that determines the importance of overlaps in overlapping or hierarchical communities.
 
-    For disjoint partitions, the formula is simplified to the following form:
+For disjoint partitions, the formula is simplified to the following form:
 
     \begin{equation} \label{eq:affinity-disjoin}
         p_{ij} = 
@@ -112,35 +112,35 @@ Although there is no formal proof, Leiden's performance was empirically observed
         \end{cases}
     \end{equation}
     
-    \subsection{Description about how it works}
+\subsection{Algorithmic Description}
 
-    Element-Centric similarity (ECS) is a new clustering comparison measure proposed by Gates et al \cite{Gates2019}. This score is based on calculating the L1 distance between the affinity matrices that are associated with the two clusterings:
+Element-Centric similarity (ECS) is a new clustering comparison measure proposed by Gates et al \cite{Gates2019} in 2019. This score is based on calculating the L1 distance between the affinity matrices that are associated with the two clusterings:
 
     \begin{equation} \label{eq:def-ecs}
         S_i (\mathcal{A}, \mathcal{B}) = 1 - \frac{1}{2 \alpha} \sum_{j = 1}^N |p_{ij}^{\mathcal{A}} - p_{ij}^{\mathcal{B}} | 
     \end{equation}
 
-    A major aspect that differentiate ECS from the other metrics is that it is element-centric and not cluster-centric, that is the score is calculated individually for each element of the partition. The overall score can be calculated using the average.
+A major improvement of ECS compared to other metrics is that it is element-centric and not cluster-centric, that is the score is calculated individually for each element of the partition. The overall score can be calculated by averaging individual values.
 
-    \subsection{Comparison with other clustering metrics}
-    The authors identified four clustering comparison biases that might influence the similarity score:
+\subsection{Comparison with other clustering metrics}
+The authors identified four clustering comparison biases that influence the similarity score:
     \begin{itemize}
-        \item \textbf{bias in randomized membership}: refers to the comparison between a partition and its duplicate after some random swaps between clustering labels are performed; as the ratio of random swaps increases, the similarity is expected to decrease, but not to be 0, as there is at least one point of similarity, which is the same number of clusters with the same sizes. A metric is biased if it will consider the partitions completely dissimilar.
+        \item \textbf{bias in randomized membership}: refers to the comparison between a partition and its duplicate after random swaps between clustering labels are performed; as the ratio of random swaps increases, the similarity is expected to decrease, but not to be 0, as there is at least one point of similarity, which is the same number of clusters with the same sizes. A metric is biased if it will consider the partitions completely dissimilar.
         \item \textbf{bias in skewed cluster sizes}: given two partitions, their similarity is non-zero if they have the same number of clusters and the same cluster sizes; there is at least the partitions structure which is similar. However, changing the clustering sizes (their skewness) should increase the dissimilarity between the partitions. The bias here is for a metric to disregard the change in the clustering entropy and to not decrease the similarity between the partitions as their structure increasingly diverge.
         \item \textbf{bias in the number of clusters}: refers to the comparison between a fixed partition and a membership obtained by creating $c$ equally-sized random clusters, with $c$ starting to the number of clusters of the first partition. Increasing the value of $c$ should lead to the decrease of similarity. The bias is present here if a metric does not perceive this increase of the number of clusters as a sign of dissimilarity.
         \item \textbf{the problem of matching}: the problem takes three partitions; the first one is fixed, the second one is the result of moving $x$ points from one cluster to another clusters; the third partition is obtained by moving the same amount of points from one cluster and distribute them across more than one other clusters. The problem of matching is to consider the pairs (first, third) and (first, second) equally similar.
     \end{itemize}
     
-    The biases of each clustering evaluated metric are presented in Figure \ref{fig:bias-comp}. It is noticeable that ECS does not suffer from any bias.
+    The biases of each clustering metric are summarised in Figure \ref{fig:bias-comp}; ECS is not affected by any of these known biases.
     
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{images/ch1/1_ecs_adv.png}}
-    \caption{\label{fig:bias-comp}\textbf{The presence of bias in clustering comparison metrics} Each row indicates the biases that is present in a metric (with an X). Element-Centric Similarity is the only score with no bias. The figure is taken from the ECS paper \cite{Gates2019}}
+    \caption{\label{fig:bias-comp}\textbf{Summary of biases for clustering comparison metrics} Each row indicates the biases that are present in a metric (indicated with an X). Element-Centric Similarity is the only score with no (known) bias. The figure is presented in the original ECS paper \cite{Gates2019}}
 \end{figure}
 
     \subsection{Properties}
-    In addition to the lack of bias in calculating the similarity between two partitions, ECS has other two useful features:
+    In addition to the lack of known biases in calculating the similarity between two partitions, ECS has other two useful features:
 
     \begin{enumerate}
         \item this score can be applied not only on flat disjoint membership vectors, but also on partition obtained after applying an overlapping or hierarchical clustering methods.
